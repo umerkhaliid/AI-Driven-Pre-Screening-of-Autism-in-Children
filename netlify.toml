@@ -1,0 +1,12 @@
+# Netlify serves only the static folder that contains index.html.
+# The FastAPI backend is NOT run on Netlify — deploy API separately (Railway, Render, etc.).
+
+[build]
+  publish = "web/public"
+  # No frontend build step; optional no-op if Netlify requires a command:
+  command = "echo Static publish from web/public"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
