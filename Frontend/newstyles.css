@@ -1,0 +1,136 @@
+:root {
+  --c-sky: #c4f2ff;
+  --c-blush: #f6bdb9;
+  --c-teal: #00abb3;
+  --c-lav: #bcb4df;
+  --c-red: #da413a;
+  --c-green: #94b937;
+  --c-ice: #fbfcfe;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  color: #111;
+  background: linear-gradient(90deg, var(--c-sky), var(--c-teal), var(--c-blush));
+  min-height: 100vh;
+}
+
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
+  padding: 40px 16px;
+}
+
+.line-art {
+  position: absolute;
+  width: min(38vw, 360px);
+  opacity: 0.9;
+  filter: none;
+}
+
+.line-art.left {
+  left: 5%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.line-art.right {
+  right: 5%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.card {
+  width: min(380px, 90vw);
+  background: #d8f5ff;
+  border-radius: 18px;
+  padding: 24px 28px 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+h1 {
+  margin: 6px 0 18px;
+  font-size: 24px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+.field input {
+  height: 36px;
+  border-radius: 10px;
+  border: 2px solid var(--c-blush);
+  background: var(--c-ice);
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.forgot {
+  display: block;
+  text-align: left;
+  text-decoration: none;
+  color: #111;
+  margin: 6px 0 16px;
+  font-size: 14px;
+}
+
+.primary {
+  width: 100%;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #2f2f2f;
+  background: #6fb0b7;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.divider {
+  margin: 14px 0 10px;
+  font-size: 14px;
+}
+
+.socials {
+  display: grid;
+  grid-template-columns: repeat(2, 90px);
+  justify-content: center;
+  gap: 18px;
+}
+
+.social {
+  height: 40px;
+  border-radius: 12px;
+  border: 0;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.social.google {
+  background: var(--c-blush);
+}
+
+.social.facebook {
+  background: #76aff3;
+}
+
+@media (max-width: 900px) {
+  .line-art {
+    display: none;
+  }
+}

@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AID - A Pre-Screening Tool for Autism Detection</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(90deg, #c4f2ff 0%, #00abb3 50%, #f6bdb9 100%);
+      --card-bg: rgba(223, 244, 250, 0.9);
+      --primary: #77aeb5;
+      --primary-dark: #699fa7;
+      --primary-light: rgba(247, 252, 254, 0.74);
+      --secondary-text: #5f7880;
+      --heading: #123d44;
+      --border: rgba(113, 169, 176, 0.48);
+      --success: #4caf50;
+      --warning: #ff9800;
+      --danger: #e57373;
+      --info-bg: rgba(247, 252, 254, 0.78);
+      --info-border: rgba(113, 169, 176, 0.8);
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg-gradient);
+      background-attachment: fixed;
+      overflow-x: hidden;
+      font-family: 'Inter', sans-serif;
+      color: var(--heading);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.56);
+      max-width: 560px;
+      width: 90%;
+      border-radius: 30px;
+      padding: 40px 32px;
+      box-shadow: 0 28px 70px rgba(23, 77, 83, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+      position: relative;
+      z-index: 10;
+      box-sizing: border-box;
+    }
+
+    .brain-decoration {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      width: min(38vw, 360px);
+      min-width: 180px;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.9;
+      object-fit: contain;
+      filter: none;
+    }
+
+    .brain-left {
+      left: 5%;
+    }
+
+    .brain-right {
+      right: 5%;
+    }
+
+    .app-name {
+      font-size: 24px;
+      line-height: 1.25;
+      color: var(--secondary-text);
+      font-weight: 600;
+    }
+
+    .app-subtitle {
+      font-size: 18px;
+      line-height: 1.35;
+      color: #7d9097;
+    }
+
+    @media(max-width: 600px) {
+      .brain-decoration {
+        display: none;
+      }
+
+      .card {
+        width: 95%;
+        padding: 32px 24px;
+        border-radius: 24px;
+      }
+
+      .app-name {
+        font-size: 20px;
+      }
+
+      .app-subtitle {
+        font-size: 16px;
+      }
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: 2px solid rgba(75, 98, 103, 0.55);
+      border-radius: 14px;
+      padding: 14px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 10px 20px rgba(119, 174, 181, 0.18);
+    }
+
+    .btn-primary:not(:disabled):hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(105, 159, 167, 0.22);
+    }
+
+    .btn-secondary {
+      background: rgba(235, 248, 251, 0.58);
+      color: var(--heading);
+      border: 2px solid rgba(113, 169, 176, 0.78);
+      border-radius: 14px;
+      padding: 14px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 6px 14px rgba(119, 174, 181, 0.08);
+    }
+
+    .btn-secondary:not(:disabled):hover {
+      background: rgba(248, 252, 254, 0.88);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 18px rgba(119, 174, 181, 0.12);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 14px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(229, 115, 115, 0.3);
+    }
+
+    .btn-danger:not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(229, 115, 115, 0.4);
+    }
+
+    .btn-disabled,
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .btn-row>button {
+      flex: 1;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.74);
+      border-radius: 14px;
+      font-size: 15px;
+      box-sizing: border-box;
+      font-family: inherit;
+      margin-bottom: 4px;
+      transition: all 0.2s;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #ffffff;
+      box-shadow: 0 0 0 4px rgba(117, 168, 175, 0.2);
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--heading);
+      margin-bottom: 6px;
+      margin-top: 16px;
+    }
+
+    .field-error {
+      color: var(--danger);
+      font-size: 12px;
+      display: none;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .field-error.visible {
+      display: block;
+    }
+
+    .progress-track {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-top: 12px;
+      margin-bottom: 24px;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 99px;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .badge-qchat {
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--primary-dark);
+      border: 1px solid var(--border);
+    }
+
+    .badge-mchat {
+      background: rgba(255, 255, 255, 0.8);
+      color: #5b21b6;
+      border: 1px solid rgba(91, 33, 182, 0.2);
+    }
+
+    #toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(17, 58, 59, 0.95);
+      backdrop-filter: blur(8px);
+      color: white;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 14px;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+      font-weight: 500;
+    }
+
+    #toast.show {
+      opacity: 1;
+    }
+
+    .result-card {
+      background: rgba(248, 252, 254, 0.72);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      backdrop-filter: blur(4px);
+      transition: all 0.2s;
+    }
+
+    .result-card:hover {
+      background: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .result-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--secondary-text);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .result-value {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--heading);
+      margin-top: 4px;
+    }
+
+    .risk-low {
+      border-left: 4px solid #4caf50;
+    }
+
+    .risk-medium {
+      border-left: 4px solid #ff9800;
+    }
+
+    .risk-high {
+      border-left: 4px solid #e57373;
+    }
+
+    .option-btn {
+      width: 100%;
+      text-align: left;
+      padding: 16px 20px;
+      margin: 8px 0;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      font-size: 15px;
+      background: rgba(248, 252, 254, 0.72);
+      color: var(--heading);
+      font-family: inherit;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .option-btn:hover {
+      background: rgba(252, 254, 255, 0.92);
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(117, 168, 175, 0.1);
+    }
+
+    .option-btn.selected {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(117, 168, 175, 0.3);
+    }
+
+    [dir="rtl"] .option-btn {
+      text-align: right;
+    }
+
+    .yn-row {
+      display: flex;
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .yn-btn {
+      flex: 1;
+      height: 72px;
+      border-radius: 16px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: inherit;
+      background: rgba(255, 255, 255, 0.6);
+      transition: all 0.2s;
+    }
+
+    .yn-btn-yes {
+      color: #2e7d32;
+      border-color: rgba(165, 214, 167, 0.5);
+    }
+
+    .yn-btn-yes:hover {
+      background: #e8f5e9;
+      border-color: #a5d6a7;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.1);
+    }
+
+    .yn-btn-yes.selected {
+      background: #4caf50;
+      color: white;
+      border-color: #4caf50;
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .yn-btn-no {
+      color: #c62828;
+      border-color: rgba(239, 154, 154, 0.5);
+    }
+
+    .yn-btn-no:hover {
+      background: #fdecea;
+      border-color: #ef9a9a;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(229, 115, 115, 0.1);
+    }
+
+    .yn-btn-no.selected {
+      background: #e57373;
+      color: white;
+      border-color: #e57373;
+      box-shadow: 0 4px 12px rgba(229, 115, 115, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 4px solid rgba(117, 168, 175, 0.2);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      margin: 24px auto;
+      animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .disclaimer-box {
+      background: rgba(238, 251, 252, 0.85);
+      border-left: 4px solid var(--primary);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-top: 24px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--heading);
+      font-weight: 500;
+    }
+
+    [dir="rtl"] .disclaimer-box {
+      border-left: none;
+      border-right: 4px solid var(--primary);
+    }
+  </style>
+</head>
+
+<body dir="ltr">
+
+  <img class="brain-decoration brain-left" src="leftbrain.png" alt="">
+  <img class="brain-decoration brain-right" src="rightbrain.png" alt="">
+
+  <div class="card">
+    <div id="view-home"></div>
+    <div id="view-language"></div>
+    <div id="view-auth"></div>
+    <div id="view-childInfo"></div>
+    <div id="view-profileCreated"></div>
+    <div id="view-photoUpload"></div>
+    <div id="view-photoResult"></div>
+    <div id="view-qchat"></div>
+    <div id="view-mchat"></div>
+    <div id="view-preSummary"></div>
+    <div id="view-results"></div>
+  </div>
+
+  <div id="modalOverlay"
+    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:8888; justify-content:center; align-items:center; padding:20px;">
+    <div
+      style="background:white; border-radius:20px; padding:32px; max-width:480px; width:100%; max-height:80vh; overflow-y:auto; box-sizing:border-box;">
+      <h2 id="modalTitle" style="color:#1a3c3e; margin-top:0; margin-bottom:16px;"></h2>
+      <p id="modalBody" style="color:#4b5563; line-height:1.7; font-size:15px; margin-bottom:0;"></p>
+      <button onclick="closeModal()"
+        style="margin-top:28px; width:100%; padding:14px; background:var(--primary); color:white; border:2px solid rgba(75,98,103,0.55); border-radius:14px; font-size:15px; font-weight:600; cursor:pointer;"
+        id="modalCloseBtn"></button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    let currentLang = "en";
+    let currentView = "home";
+    let authMode = "register";
+    let currentUser = null;
+    let currentChild = { name: "", age_mons: 0, gender: "", jaundice: "", family_asd: "" };
+    let childPhotoBase64 = null;
+    let photoScreeningResult = null;
+    let qchatResponses = new Array(10).fill(null);
+    let mchatResponses = new Array(14).fill(null);
+    let currentQIndex = 0;
+    let activeSection = "qchat";
+    let predictionResult = null;
+    let isPreSummaryLoading = true;
+    const API_BASE_URL = "http://localhost:8000";
+
+    const ALL_VIEWS = ["home", "language", "auth", "childInfo", "profileCreated",
+      "photoUpload", "photoResult", "qchat", "mchat", "preSummary", "results"];
+
+    const T = {
+      en: {
+        appName: "Autism Intelligence Detection",
+        appSubtitle: "A Pre-Screening Tool For Autism Detection",
+        welcomeNote: "⚠️ Note: This is only a screening tool for autism detection and NOT a diagnosis. Please consult a licensed clinician for professional evaluation.",
+        aboutUs: "About Us", next: "Next →", back: "← Back",
+        selectLang: "Select your preferred language",
+        createAccount: "Create Account", login: "Log In",
+        emailLabel: "Email Address", passwordLabel: "Password",
+        alreadyHave: "Already have an account? Log in",
+        dontHave: "Don't have an account? Create one",
+        childInfo: "Child Information",
+        childInfoSub: "These answers match the model inputs and are saved on this profile.",
+        nameLbl: "Child Name / Nickname (alphabets only)",
+        ageLbl: "Age in Months (48 to 144)",
+        ageHint: "Equivalent to 4 to 12 years",
+        genderLbl: "Gender",
+        genderOpts: ["Select...", "Male", "Female", "Not Defined"],
+        ynOpts: ["Select...", "Yes", "No"],
+        jaundiceLbl: "Jaundice",
+        familyLbl: "Family ASD",
+        save: "Save",
+        nameErr: "Name must contain alphabets only.",
+        ageErr: "Age must be between 48 and 144 months.",
+        genderErr: "Please select a gender.",
+        jaunErr: "Please answer the jaundice question.",
+        famErr: "Please answer the family ASD question.",
+        profileCreated: "Profile Successfully Created ✓",
+        startScreening: "Start Screening",
+        addMore: "Add Another Child",
+        logout: "Log Out",
+        facialTitle: "Facial Feature Based Screening",
+        facialSub: "Upload or take a clear front-facing photo of your child.",
+        uploadPic: "📁 Upload Picture", takePic: "📷 Take Picture",
+        facialResult: "Facial Screening Result", result: "Result:",
+        autisticLabel: "⚠️ Autistic Indicators Detected",
+        nonAutisticLabel: "✅ Non-Autistic",
+        autisticMsg: "Autistic indicators were detected. You may continue with behavioural questionnaires for a more complete screening.",
+        nonAutisticMsg: "No autistic indicators were detected in the facial analysis.",
+        goToProfile: "Go to Profile", continueQ: "Continue to Questionnaire",
+        qchatBadge: "Q-CHAT-10 — Section 1 of 2",
+        mchatBadge: "M-CHAT-R — Section 2 of 2",
+        questionOf: "Question", of: "of", submit: "Submit",
+        responsesRecorded: "Your responses have been recorded.",
+        viewReport: "View Report →",
+        screeningScore: "Screening Score", riskLevel: "Risk Level",
+        modelConfidence: "Model Confidence", recommendation: "Recommendation",
+        disclaimer: "⚠️ Important: This is a screening tool only, not a diagnosis. Please consult a licensed clinician.",
+        downloadReport: "📥 Download Report",
+        aboutTitle: "About AID",
+        aboutText: "AID was developed as a research-grade autism pre-screening tool combining facial analysis, Q-CHAT-10, and M-CHAT-R questionnaires to support early detection in children aged 4–12 years. This tool is intended for parents and caregivers and does not replace clinical diagnosis.",
+        close: "Close", yesBtn: "✅ Yes", noBtn: "❌ No",
+        processing: "Processing your responses..."
+      },
+      ur: {
+        appName: "آٹزم انٹیلیجنس ڈیٹیکشن",
+        appSubtitle: "آٹزم کا ابتدائی معائنہ ٹول",
+        welcomeNote: "⚠️ نوٹ: یہ صرف ایک اسکریننگ ٹول ہے، تشخیص نہیں۔ براہ کرم کسی لائسنس یافتہ ماہر ڈاکٹر سے مشورہ کریں۔",
+        aboutUs: "ہمارے بارے میں", next: "اگلا ←", back: "→ واپس",
+        selectLang: "اپنی پسندیدہ زبان منتخب کریں",
+        createAccount: "اکاؤنٹ بنائیں", login: "لاگ ان",
+        emailLabel: "ای میل پتہ", passwordLabel: "پاس ورڈ",
+        alreadyHave: "کیا آپ کا پہلے سے اکاؤنٹ ہے؟ لاگ ان کریں",
+        dontHave: "اکاؤنٹ نہیں ہے؟ بنائیں",
+        childInfo: "بچے کی معلومات",
+        childInfoSub: "یہ جوابات ماڈل کے ان پٹ سے میل کھاتے ہیں اور اس پروفائل میں محفوظ ہوں گے۔",
+        nameLbl: "بچے کا نام / عرفی نام (صرف حروف)",
+        ageLbl: "عمر مہینوں میں (48 تا 144)",
+        ageHint: "یعنی 4 سے 12 سال",
+        genderLbl: "جنس",
+        genderOpts: ["منتخب کریں...", "مرد", "عورت", "غیر متعین"],
+        ynOpts: ["منتخب کریں...", "ہاں", "نہیں"],
+        jaundiceLbl: "یرقان",
+        familyLbl: "خاندانی ASD",
+        save: "محفوظ کریں",
+        nameErr: "نام میں صرف حروف ہونے چاہئیں۔",
+        ageErr: "عمر 48 تا 144 مہینوں کے درمیان ہونی چاہیے۔",
+        genderErr: "براہ کرم جنس منتخب کریں۔",
+        jaunErr: "براہ کرم یرقان کا جواب دیں۔",
+        famErr: "براہ کرم خاندانی ASD کا جواب دیں۔",
+        profileCreated: "پروفائل کامیابی سے بن گئی ✓",
+        startScreening: "اسکریننگ شروع کریں",
+        addMore: "مزید بچہ شامل کریں",
+        logout: "لاگ آؤٹ",
+        facialTitle: "چہرے کی خصوصیات پر مبنی اسکریننگ",
+        facialSub: "اپنے بچے کی واضح سامنے والی تصویر اپلوڈ کریں یا کھینچیں۔",
+        uploadPic: "📁 تصویر اپلوڈ کریں", takePic: "📷 تصویر کھینچیں",
+        facialResult: "چہرے کی اسکریننگ کا نتیجہ", result: "نتیجہ:",
+        autisticLabel: "⚠️ آٹسٹک علامات پائی گئیں",
+        nonAutisticLabel: "✅ غیر آٹسٹک",
+        autisticMsg: "چہرے کے تجزیے میں آٹسٹک علامات پائی گئیں۔ مزید مکمل اسکریننگ کے لیے رویے کے سوالنامے جاری رکھیں۔",
+        nonAutisticMsg: "چہرے کے تجزیے میں کوئی آٹسٹک علامات نہیں پائی گئیں۔",
+        goToProfile: "پروفائل پر جائیں", continueQ: "سوالنامے پر جائیں",
+        qchatBadge: "Q-CHAT-10 — حصہ 1 از 2",
+        mchatBadge: "M-CHAT-R — حصہ 2 از 2",
+        questionOf: "سوال", of: "از", submit: "جمع کریں",
+        responsesRecorded: "آپ کے جوابات محفوظ ہو گئے۔",
+        viewReport: "رپورٹ دیکھیں ←",
+        screeningScore: "اسکریننگ اسکور", riskLevel: "خطرے کی سطح",
+        modelConfidence: "ماڈل کا اعتماد", recommendation: "سفارش",
+        disclaimer: "⚠️ اہم: یہ صرف ایک اسکریننگ ٹول ہے، تشخیص نہیں۔ براہ کرم ماہر ڈاکٹر سے رجوع کریں۔",
+        downloadReport: "📥 رپورٹ ڈاؤنلوڈ کریں",
+        aboutTitle: "AID کے بارے میں",
+        aboutText: "AID ایک تحقیقی سطح کا آٹزم پری اسکریننگ ٹول ہے جو چہرے کے تجزیے، Q-CHAT-10 اور M-CHAT-R سوالناموں کو یکجا کرتا ہے۔ یہ والدین اور نگہداشت کنندگان کے لیے ہے اور طبی تشخیص کی جگہ نہیں لیتا۔",
+        close: "بند کریں", yesBtn: "✅ ہاں", noBtn: "❌ نہیں",
+        processing: "جوابات پر کارروائی ہو رہی ہے..."
+      }
+    };
+
+    const ALL_QUESTIONS = [
+      {
+        id: "a1", section: "qchat", type: "freq5", atRisk: [3, 4],
+        en: { text: "Does your child look at you when you call his/her name?", opts: ["Always", "Usually", "Sometimes", "Rarely", "Never"] },
+        ur: { text: "کیا آپ کا بچہ آپ کی طرف دیکھتا ہے جب آپ اس کا نام پکارتے ہیں؟", opts: ["ہمیشہ", "عام طور پر", "کبھی کبھی", "شاذ و نادر", "کبھی نہیں"] }
+      },
+      {
+        id: "a2", section: "qchat", type: "scale5", atRisk: [3, 4],
+        en: { text: "How easy is it for you to get eye contact with your child?", opts: ["Very easy", "Quite easy", "Quite difficult", "Very difficult", "Impossible"] },
+        ur: { text: "آپ کے بچے سے آنکھ ملانا کتنا آسان ہے؟", opts: ["بہت آسان", "کافی آسان", "کافی مشکل", "بہت مشکل", "ناممکن"] }
+      },
+      {
+        id: "a3", section: "qchat", type: "freq5", atRisk: [3, 4],
+        en: { text: "Does your child point to indicate that s/he wants something? (e.g., a toy out of reach)", opts: ["Many times a day", "A few times a day", "A few times a week", "Less than once a week", "Never"] },
+        ur: { text: "کیا آپ کا بچہ کسی چیز کی طرف اشارہ کرتا ہے جب وہ اسے چاہتا ہو؟ (مثلاً پہنچ سے باہر کھلونا)", opts: ["دن میں کئی بار", "دن میں چند بار", "ہفتے میں چند بار", "ہفتے میں ایک بار سے کم", "کبھی نہیں"] }
+      },
+      {
+        id: "a4", section: "qchat", type: "freq5", atRisk: [3, 4],
+        en: { text: "Does your child point to share interest with you? (e.g., pointing at an interesting sight)", opts: ["Many times a day", "A few times a day", "A few times a week", "Less than once a week", "Never"] },
+        ur: { text: "کیا آپ کا بچہ آپ کے ساتھ دلچسپی شیئر کرنے کے لیے اشارہ کرتا ہے؟ (مثلاً کسی دلچسپ چیز کی طرف اشارہ کرنا)", opts: ["دن میں کئی بار", "دن میں چند بار", "ہفتے میں چند بار", "ہفتے میں ایک بار سے کم", "کبھی نہیں"] }
+      },
+      {
+        id: "a5", section: "qchat", type: "freq5", atRisk: [3, 4],
+        en: { text: "Does your child pretend? (e.g., care for dolls, talk on a toy phone)", opts: ["Many times a day", "A few times a day", "A few times a week", "Less than once a week", "Never"] },
+        ur: { text: "کیا آپ کا بچہ بہانہ کرتا ہے؟ (مثلاً گڑیا کی دیکھ بھال، کھلونا فون پر بات)", opts: ["دن میں کئی بار", "دن میں چند بار", "ہفتے میں چند بار", "ہفتے میں ایک بار سے کم", "کبھی نہیں"] }
+      },
+      {
+        id: "a6", section: "qchat", type: "freq5", atRisk: [3, 4],
+        en: { text: "Does your child follow where you're looking?", opts: ["Many times a day", "A few times a day", "A few times a week", "Less than once a week", "Never"] },
+        ur: { text: "کیا آپ کا بچہ وہاں دیکھتا ہے جہاں آپ دیکھ رہے ہوں؟", opts: ["دن میں کئی بار", "دن میں چند بار", "ہفتے میں چند بار", "ہفتے میں ایک بار سے کم", "کبھی نہیں"] }
+      },
+      {
+        id: "a7", section: "qchat", type: "freq5", atRisk: [3, 4],
+        en: { text: "Does your child comfort upset family members? (e.g., tries to hug a crying sibling)", opts: ["Always", "Usually", "Sometimes", "Rarely", "Never"] },
+        ur: { text: "کیا آپ کا بچہ پریشان خاندانی افراد کو تسلی دیتا ہے؟ (مثلاً روتے ہوئے بہن بھائی کو گلے لگانا)", opts: ["ہمیشہ", "عام طور پر", "کبھی کبھی", "شاذ و نادر", "کبھی نہیں"] }
+      },
+      {
+        id: "a8", section: "qchat", type: "scale5", atRisk: [3, 4],
+        en: { text: "Would you describe your child's first words as typical?", opts: ["Very typical", "Quite typical", "Slightly unusual", "Very unusual", "Has not started speaking"] },
+        ur: { text: "کیا آپ کے بچے کے پہلے الفاظ معمول کے مطابق تھے؟", opts: ["بالکل معمول", "کافی معمول", "تھوڑے غیر معمولی", "بہت غیر معمولی", "ابھی بولنا شروع نہیں کیا"] }
+      },
+      {
+        id: "a9", section: "qchat", type: "freq5", atRisk: [3, 4],
+        en: { text: "Does your child use simple gestures? (e.g., wave goodbye, clap)", opts: ["Many times a day", "A few times a day", "A few times a week", "Less than once a week", "Never"] },
+        ur: { text: "کیا آپ کا بچہ سادہ اشارے استعمال کرتا ہے؟ (مثلاً الوداع کہنا، تالی بجانا)", opts: ["دن میں کئی بار", "دن میں چند بار", "ہفتے میں چند بار", "ہفتے میں ایک بار سے کم", "کبھی نہیں"] }
+      },
+      {
+        id: "a10", section: "qchat", type: "freq5", atRisk: [0, 1],
+        en: { text: "Does your child stare at nothing with no apparent purpose?", opts: ["Many times a day", "A few times a day", "A few times a week", "Less than once a week", "Never"] },
+        ur: { text: "کیا آپ کا بچہ بغیر کسی مقصد کے خلا میں گھورتا ہے؟", opts: ["دن میں کئی بار", "دن میں چند بار", "ہفتے میں چند بار", "ہفتے میں ایک بار سے کم", "کبھی نہیں"] }
+      },
+      {
+        id: "a11", section: "mchat", type: "yesno", atRisk: ["no"],
+        en: { text: "If you point at something across the room, does your child look at it?" },
+        ur: { text: "اگر آپ کمرے میں کسی چیز کی طرف اشارہ کریں، تو کیا آپ کا بچہ اسے دیکھتا ہے؟" }
+      },
+      {
+        id: "a12", section: "mchat", type: "yesno", atRisk: ["yes"],
+        en: { text: "Have you ever wondered if your child might be deaf?" },
+        ur: { text: "کیا آپ نے کبھی سوچا ہے کہ آپ کا بچہ بہرہ ہو سکتا ہے؟" }
+      },
+      {
+        id: "a13", section: "mchat", type: "yesno", atRisk: ["no"],
+        en: { text: "Does your child like climbing on things? (e.g., furniture, playground equipment)" },
+        ur: { text: "کیا آپ کا بچہ چیزوں پر چڑھنا پسند کرتا ہے؟ (مثلاً فرنیچر، کھیل کا میدان)" }
+      },
+      {
+        id: "a14", section: "mchat", type: "yesno", atRisk: ["yes"],
+        en: { text: "Does your child make unusual finger movements near his/her eyes?" },
+        ur: { text: "کیا آپ کا بچہ اپنی آنکھوں کے قریب غیر معمولی انگلیوں کی حرکات کرتا ہے؟" }
+      },
+      {
+        id: "a15", section: "mchat", type: "yesno", atRisk: ["no"],
+        en: { text: "Is your child interested in other children?" },
+        ur: { text: "کیا آپ کا بچہ دوسرے بچوں میں دلچسپی رکھتا ہے؟" }
+      },
+      {
+        id: "a16", section: "mchat", type: "yesno", atRisk: ["no"],
+        en: { text: "Does your child show you things by bringing them to you or holding them up?" },
+        ur: { text: "کیا آپ کا بچہ آپ کو چیزیں لا کر یا اٹھا کر دکھاتا ہے؟" }
+      },
+      {
+        id: "a17", section: "mchat", type: "yesno", atRisk: ["no"],
+        en: { text: "When you smile at your child, does he/she smile back at you?" },
+        ur: { text: "جب آپ اپنے بچے پر مسکراتے ہیں، تو کیا وہ آپ پر مسکراتا ہے؟" }
+      },
+      {
+        id: "a18", section: "mchat", type: "yesno", atRisk: ["yes"],
+        en: { text: "Does your child get upset by everyday noises? (e.g., vacuum cleaner, loud music)" },
+        ur: { text: "کیا آپ کا بچہ روزمرہ کی آوازوں سے پریشان ہو جاتا ہے؟ (مثلاً ویکیوم کلینر، تیز موسیقی)" }
+      },
+      {
+        id: "a19", section: "mchat", type: "yesno", atRisk: ["no"],
+        en: { text: "Does your child walk?" },
+        ur: { text: "کیا آپ کا بچہ چلتا ہے؟" }
+      },
+      {
+        id: "a20", section: "mchat", type: "yesno", atRisk: ["no"],
+        en: { text: "Does your child try to copy what you do? (e.g., wave, clap, make a face)" },
+        ur: { text: "کیا آپ کا بچہ آپ کی نقل کرنے کی کوشش کرتا ہے؟ (مثلاً ہاتھ ہلانا، تالی بجانا، منہ بنانا)" }
+      },
+      {
+        id: "a21", section: "mchat", type: "yesno", atRisk: ["no"],
+        en: { text: "Does your child try to get you to watch him/her? (e.g., says 'Look!' or tugs your sleeve)" },
+        ur: { text: "کیا آپ کا بچہ آپ کو اپنی طرف متوجہ کرنے کی کوشش کرتا ہے؟ (مثلاً 'دیکھو!' کہنا یا آستین کھینچنا)" }
+      },
+      {
+        id: "a22", section: "mchat", type: "yesno", atRisk: ["no"],
+        en: { text: "Does your child understand when you tell him/her to do something?" },
+        ur: { text: "کیا آپ کا بچہ سمجھتا ہے جب آپ اسے کچھ کرنے کو کہتے ہیں؟" }
+      },
+      {
+        id: "a23", section: "mchat", type: "yesno", atRisk: ["no"],
+        en: { text: "Does your child look at your face to check your reaction when something is new?" },
+        ur: { text: "کیا آپ کا بچہ کوئی نئی چیز دیکھ کر آپ کے چہرے کا رد عمل جانچتا ہے؟" }
+      },
+      {
+        id: "a24", section: "mchat", type: "yesno", atRisk: ["no"],
+        en: { text: "Does your child like movement activities? (e.g., being bounced on your knee, swings)" },
+        ur: { text: "کیا آپ کا بچہ حرکت والی سرگرمیاں پسند کرتا ہے؟ (مثلاً گھٹنے پر اچھلنا، جھولا)" }
+      }
+    ];
+
+    function showView(id) {
+      ALL_VIEWS.forEach(v => {
+        document.getElementById("view-" + v).style.display = v === id ? "block" : "none";
+      });
+      currentView = id;
+    }
+
+    function renderCurrentView() {
+      const map = {
+        home: renderHome, language: renderLanguage, auth: renderAuth,
+        childInfo: renderChildInfo, profileCreated: renderProfileCreated,
+        photoUpload: renderPhotoUpload, photoResult: renderPhotoResult,
+        qchat: renderQuestion, mchat: renderQuestion,
+        preSummary: renderPreSummary, results: renderResults
+      };
+      if (map[currentView]) map[currentView]();
+    }
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      if (lang === "ur") {
+        document.body.setAttribute("dir", "rtl");
+        document.body.style.fontFamily = "'Noto Nastaliq Urdu', serif";
+      } else {
+        document.body.setAttribute("dir", "ltr");
+        document.body.style.fontFamily = "'Inter', sans-serif";
+      }
+      renderCurrentView();
+    }
+
+    let _tt = null;
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg; t.classList.add("show");
+      clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove("show"), 3000);
+    }
+
+    function showModal(type) {
+      const t = T[currentLang];
+      document.getElementById("modalTitle").textContent = t.aboutTitle;
+      document.getElementById("modalBody").textContent = t.aboutText;
+      document.getElementById("modalCloseBtn").textContent = t.close;
+      document.getElementById("modalOverlay").style.display = "flex";
+    }
+    function closeModal() {
+      document.getElementById("modalOverlay").style.display = "none";
+    }
+
+    function showFieldError(id, msg) {
+      const el = document.getElementById(id);
+      if (!el) return; el.textContent = msg; el.classList.add("visible");
+    }
+    function clearFieldError(id) {
+      const el = document.getElementById(id);
+      if (!el) return; el.textContent = ""; el.classList.remove("visible");
+    }
+    function clearAllErrors() {
+      document.querySelectorAll(".field-error")
+        .forEach(el => { el.textContent = ""; el.classList.remove("visible"); });
+    }
+
+    function buildHeader() {
+      const t = T[currentLang];
+      return `
+        <div style="text-align:center; margin-bottom:20px;">
+          <div style="width:44px;height:44px;background:var(--primary);border-radius:10px;
+            display:inline-flex;align-items:center;justify-content:center;
+            color:white;font-weight:700;font-size:16px;margin-bottom:8px;">AID</div>
+          <div class="app-name">${t.appName}</div>
+          <div class="app-subtitle">${t.appSubtitle}</div>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border);margin-bottom:20px;">
+      `;
+    }
+
+    function renderHome() {
+      const t = T[currentLang];
+      document.getElementById("view-home").innerHTML = `
+        ${buildHeader()}
+        <div style="background:#fff9c4; ${currentLang === 'ur' ? 'border-right:4px solid #fbc02d;' : 'border-left:4px solid #fbc02d;'} padding:16px; border-radius:8px; font-size:14px; line-height:1.6; margin-bottom:28px; color:#5f4b00;" dir="${currentLang === 'ur' ? 'rtl' : 'ltr'}">
+          ${t.welcomeNote}
+        </div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="showModal('about')">${t.aboutUs}</button>
+          <button class="btn-primary" onclick="showView('language');renderLanguage();">${t.next}</button>
+        </div>
+      `;
+    }
+
+    function renderLanguage() {
+      const t = T[currentLang];
+      const isEn = currentLang === "en";
+      document.getElementById("view-language").innerHTML = `
+        ${buildHeader()}
+        <h2 style="text-align:center; margin-bottom:24px; font-size:18px;">${t.selectLang}</h2>
+        <div style="display:flex; gap:16px; margin-bottom:28px;">
+          <button onclick="setLanguage('en')" style="flex:1; height:56px; border-radius:14px; border:none; cursor:pointer; font-size:16px; font-weight:600; transition:0.2s; background:${isEn ? 'var(--primary)' : 'var(--primary-light)'}; color:${isEn ? 'white' : 'var(--primary)'}; font-family:'Inter', sans-serif;">🇬🇧 English</button>
+          <button onclick="setLanguage('ur')" style="flex:1; height:56px; border-radius:14px; border:none; cursor:pointer; font-size:16px; font-weight:700; transition:0.2s; background:${!isEn ? 'var(--primary)' : 'var(--primary-light)'}; color:${!isEn ? 'white' : 'var(--primary)'}; font-family:'Noto Nastaliq Urdu', serif;">🇵🇰 اردو</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="showView('home');renderHome();">${t.back}</button>
+          <button class="btn-primary" onclick="showView('auth');renderAuth();">${t.next}</button>
+        </div>
+      `;
+    }
+
+    function renderAuth() {
+      const t = T[currentLang];
+      const isReg = authMode === "register";
+      document.getElementById("view-auth").innerHTML = `
+        ${buildHeader()}
+        <h2 style="text-align:center; margin-bottom:20px; font-size:20px;">${isReg ? t.createAccount : t.login}</h2>
+        
+        <label>${t.emailLabel}</label>
+        <input type="email" id="authEmail" value="${document.getElementById('authEmail')?.value || ''}">
+        
+        <label>${t.passwordLabel}</label>
+        <input type="password" id="authPassword" value="${document.getElementById('authPassword')?.value || ''}">
+        
+        <div class="field-error" id="authError"></div>
+        
+        <div style="text-align:center; margin-top:20px;">
+          <a href="#" onclick="event.preventDefault(); authMode='${isReg ? 'login' : 'register'}'; renderAuth();" style="color:var(--primary); font-size:14px; font-weight:600; text-decoration:none;">
+            ${isReg ? t.alreadyHave : t.dontHave}
+          </a>
+        </div>
+        
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="showView('language');renderLanguage();">${t.back}</button>
+          <button class="btn-primary" onclick="validateAuth()">${t.next}</button>
+        </div>
+      `;
+    }
+
+    function validateAuth() {
+      clearAllErrors();
+      const t = T[currentLang];
+      const e = document.getElementById("authEmail").value.trim();
+      const p = document.getElementById("authPassword").value;
+      let valid = true;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) { showFieldError("authError", "Invalid email format"); valid = false; }
+      else if (p.length < 6) { showFieldError("authError", "Password must be at least 6 characters"); valid = false; }
+
+      if (valid) {
+        currentUser = { email: e };
+        showView("childInfo");
+        renderChildInfo();
+      }
+    }
+
+    function renderChildInfo() {
+      const t = T[currentLang];
+      const c = currentChild;
+      document.getElementById("view-childInfo").innerHTML = `
+        ${buildHeader()}
+        <div style="color:var(--primary); font-size:13px; font-weight:700; text-transform:uppercase; margin-bottom:4px;">${t.childInfo}</div>
+        <div style="font-size:13px; color:var(--secondary-text); margin-bottom:20px; line-height:1.5;">${t.childInfoSub}</div>
+
+        <label>${t.nameLbl}</label>
+        <input type="text" id="childName" value="${c.name}" onchange="currentChild.name=this.value">
+        <div class="field-error" id="nameErr"></div>
+
+        <label>${t.ageLbl}</label>
+        <input type="number" id="childAge" value="${c.age_mons || ''}" onchange="currentChild.age_mons=this.value">
+        <div style="color:var(--secondary-text); font-size:11px; margin-bottom:4px;">${t.ageHint}</div>
+        <div class="field-error" id="ageErr"></div>
+
+        <label>${t.genderLbl}</label>
+        <select id="childGender" onchange="currentChild.gender=this.value">
+          <option value="" disabled ${!c.gender ? 'selected' : ''}>${t.genderOpts[0]}</option>
+          <option value="${t.genderOpts[1]}" ${c.gender === t.genderOpts[1] ? 'selected' : ''}>${t.genderOpts[1]}</option>
+          <option value="${t.genderOpts[2]}" ${c.gender === t.genderOpts[2] ? 'selected' : ''}>${t.genderOpts[2]}</option>
+          <option value="${t.genderOpts[3]}" ${c.gender === t.genderOpts[3] ? 'selected' : ''}>${t.genderOpts[3]}</option>
+        </select>
+        <div class="field-error" id="genderErr"></div>
+
+        <label>${t.jaundiceLbl}</label>
+        <select id="childJaundice" onchange="currentChild.jaundice=this.value">
+          <option value="" disabled ${!c.jaundice ? 'selected' : ''}>${t.ynOpts[0]}</option>
+          <option value="yes" ${c.jaundice === 'yes' ? 'selected' : ''}>${t.ynOpts[1]}</option>
+          <option value="no" ${c.jaundice === 'no' ? 'selected' : ''}>${t.ynOpts[2]}</option>
+        </select>
+        <div class="field-error" id="jaunErr"></div>
+
+        <label>${t.familyLbl}</label>
+        <select id="childFamily" onchange="currentChild.family_asd=this.value">
+          <option value="" disabled ${!c.family_asd ? 'selected' : ''}>${t.ynOpts[0]}</option>
+          <option value="yes" ${c.family_asd === 'yes' ? 'selected' : ''}>${t.ynOpts[1]}</option>
+          <option value="no" ${c.family_asd === 'no' ? 'selected' : ''}>${t.ynOpts[2]}</option>
+        </select>
+        <div class="field-error" id="famErr"></div>
+
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="validateChildInfo()">${t.save}</button>
+          <button class="btn-primary" onclick="validateChildInfo()">${t.next}</button>
+        </div>
+      `;
+    }
+
+    function validateChildInfo() {
+      clearAllErrors();
+      const t = T[currentLang];
+      let valid = true;
+      const n = document.getElementById("childName").value.trim();
+      const a = document.getElementById("childAge").value;
+      const g = document.getElementById("childGender").value;
+      const j = document.getElementById("childJaundice").value;
+      const f = document.getElementById("childFamily").value;
+
+      if (!/^[a-zA-Z\u0600-\u06FF\s]+$/.test(n)) { showFieldError("nameErr", t.nameErr); valid = false; }
+      let numA = parseInt(a);
+      if (isNaN(numA) || numA < 48 || numA > 144) { showFieldError("ageErr", t.ageErr); valid = false; }
+      if (!g) { showFieldError("genderErr", t.genderErr); valid = false; }
+      if (!j) { showFieldError("jaunErr", t.jaunErr); valid = false; }
+      if (!f) { showFieldError("famErr", t.famErr); valid = false; }
+
+      if (valid) {
+        currentChild.name = n;
+        currentChild.age_mons = numA;
+        currentChild.gender = g;
+        currentChild.jaundice = j;
+        currentChild.family_asd = f;
+        showView("profileCreated");
+        renderProfileCreated();
+      }
+    }
+
+    function renderProfileCreated() {
+      const t = T[currentLang];
+      document.getElementById("view-profileCreated").innerHTML = `
+        ${buildHeader()}
+        <div style="text-align:center;">
+          <div style="color:var(--primary); font-size:48px; margin-bottom:12px;">✓</div>
+          <h2 style="font-size:22px; margin-bottom:24px;">${t.profileCreated}</h2>
+          <div style="display:inline-block; background:var(--primary); color:white; font-weight:600; padding:10px 20px; border-radius:99px; margin-bottom:32px; font-size:16px;">
+            ${currentChild.name}
+          </div>
+          <button class="btn-primary" onclick="showView('photoUpload');renderPhotoUpload();" style="margin-bottom:16px;">${t.startScreening}</button>
+          <div class="btn-row" style="margin-top:0;">
+            <button class="btn-secondary" onclick="showView('childInfo');renderChildInfo();">${t.back}</button>
+            <button class="btn-secondary" onclick="currentChild={name:'',age_mons:0,gender:'',jaundice:'',family_asd:''};showView('childInfo');renderChildInfo();">${t.addMore}</button>
+          </div>
+          <button class="btn-danger" style="margin-top:16px;" onclick="currentUser=null;showView('home');renderHome();">${t.logout}</button>
+        </div>
+      `;
+    }
+
+    function renderPhotoUpload() {
+      const t = T[currentLang];
+      let previewHtml = "";
+      if (childPhotoBase64) {
+        previewHtml = `<img src="${childPhotoBase64}" style="max-height:180px; max-width:100%; border-radius:12px; margin:20px auto; display:block; box-shadow:0 10px 20px rgba(0,0,0,0.1); object-fit:contain;">`;
+      }
+      document.getElementById("view-photoUpload").innerHTML = `
+        ${buildHeader()}
+        <div style="color:var(--primary); font-size:13px; font-weight:700; text-transform:uppercase; margin-bottom:4px;">${t.facialTitle}</div>
+        <div style="font-size:13px; color:var(--secondary-text); margin-bottom:20px; line-height:1.5;">${t.facialSub}</div>
+        
+        <input type="file" id="fileUpload" accept="image/*" style="display:none;" onchange="handlePhotoSelect(event)">
+        <input type="file" id="fileCapture" accept="image/*" capture="user" style="display:none;" onchange="handlePhotoSelect(event)">
+        
+        <div style="display:flex; gap:16px; margin-bottom:16px;">
+          <button class="btn-secondary" style="flex:1; height:80px; border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;" onclick="document.getElementById('fileUpload').click()">${t.uploadPic}</button>
+          <button class="btn-secondary" style="flex:1; height:80px; border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;" onclick="document.getElementById('fileCapture').click()">${t.takePic}</button>
+        </div>
+        
+        ${previewHtml}
+        
+        <div class="btn-row">
+          <button class="btn-secondary" id="btnPhotoBack" onclick="showView('profileCreated');renderProfileCreated();">${t.back}</button>
+          <button class="btn-primary" id="btnPhotoNext" onclick="submitPhoto()" ${!childPhotoBase64 ? 'disabled' : ''}>${t.next}</button>
+        </div>
+      `;
+    }
+
+    function handlePhotoSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        childPhotoBase64 = evt.target.result;
+        renderPhotoUpload();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function submitPhoto() {
+      const t = T[currentLang];
+      const btnN = document.getElementById("btnPhotoNext");
+      const btnB = document.getElementById("btnPhotoBack");
+      btnN.disabled = true; btnB.disabled = true;
+      btnN.innerHTML = `<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:6px;vertical-align:middle;"></span> Processing...`;
+
+      try {
+        const res = await fetch(API_BASE_URL + "/api/photo/screen", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: childPhotoBase64 })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "HTTP " + res.status);
+        photoScreeningResult = data.result;
+      } catch (err) {
+        photoScreeningResult = "non-autistic";
+        showToast("Error: " + err.message);
+      }
+      showView("photoResult");
+      renderPhotoResult();
+    }
+
+    function renderPhotoResult() {
+      const t = T[currentLang];
+      const isAut = photoScreeningResult === "autistic" || photoScreeningResult === true;
+      const badgeStyle = isAut ? "background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;" : "background:#dcfce7;color:#166534;border:1px solid #86efac;";
+      const labelText = isAut ? t.autisticLabel : t.nonAutisticLabel;
+      const msgText = isAut ? t.autisticMsg : t.nonAutisticMsg;
+
+      let html = `
+        ${buildHeader()}
+        <div style="text-align:center;">
+          <img src="${childPhotoBase64}" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid var(--primary);box-shadow:0 8px 16px rgba(0,0,0,0.1);margin-bottom:16px;">
+          <h2 style="font-size:18px;font-weight:600;margin:0 0 20px 0;">${currentChild.name}</h2>
+          
+          <div style="margin-bottom:8px;font-size:12px;font-weight:700;color:var(--secondary-text);text-transform:uppercase;">${t.result}</div>
+          <div style="display:inline-block;padding:8px 16px;border-radius:99px;font-weight:600;font-size:14px;margin-bottom:20px;${badgeStyle}">
+            ${labelText}
+          </div>
+          <p style="font-size:15px;color:var(--secondary-text);line-height:1.6;margin-bottom:32px;">${msgText}</p>
+      `;
+
+      if (isAut) {
+        html += `
+          <button class="btn-primary" style="margin-bottom:16px;" onclick="currentQIndex=0;activeSection='qchat';qchatResponses.fill(null);mchatResponses.fill(null);showView('qchat');renderQuestion();">${t.continueQ}</button>
+          <button class="btn-secondary" onclick="showView('profileCreated');renderProfileCreated();">${t.goToProfile}</button>
+        </div>`;
+      } else {
+        html += `
+          <button class="btn-primary" style="margin-bottom:16px;" onclick="showView('profileCreated');renderProfileCreated();">${t.goToProfile}</button>
+          <button class="btn-danger" onclick="currentUser=null;showView('home');renderHome();">${t.logout}</button>
+        </div>`;
+      }
+      document.getElementById("view-photoResult").innerHTML = html;
+    }
+
+    function renderQuestion() {
+      const t = T[currentLang];
+      const isQchat = activeSection === "qchat";
+      const total = isQchat ? 10 : 14;
+      const responsesArr = isQchat ? qchatResponses : mchatResponses;
+      const q = isQchat ? ALL_QUESTIONS[currentQIndex] : ALL_QUESTIONS[10 + currentQIndex];
+      const qText = q[currentLang].text;
+      const badgeCls = isQchat ? "badge-qchat" : "badge-mchat";
+      const badgeTxt = isQchat ? t.qchatBadge : t.mchatBadge;
+      const progress = ((currentQIndex + 1) / total) * 100;
+
+      let html = `
+        ${buildHeader()}
+        <div class="badge ${badgeCls}" style="margin-bottom:16px;">${badgeTxt}</div>
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:600; color:var(--secondary-text);">
+          <span>${t.questionOf} ${currentQIndex + 1} ${t.of} ${total}</span>
+        </div>
+        
+        <div class="progress-track">
+          <div class="progress-fill" style="width:${progress}%;"></div>
+        </div>
+        
+        <h3 style="font-size:${currentLang === 'ur' ? '19px' : '17px'}; line-height:1.6; margin-bottom:24px;">${qText}</h3>
+      `;
+
+      if (q.type === "yesno") {
+        html += `<div class="yn-row">`;
+        ['yes', 'no'].forEach(val => {
+          const isSel = responsesArr[currentQIndex] === val;
+          const btnCls = val === 'yes' ? 'yn-btn-yes' : 'yn-btn-no';
+          const txt = val === 'yes' ? t.yesBtn : t.noBtn;
+          html += `<button class="yn-btn ${btnCls} ${isSel ? 'selected' : ''}" onclick="handleAnswer('${val}')">${txt}</button>`;
+        });
+        html += `</div>`;
+      } else {
+        q[currentLang].opts.forEach((opt, idx) => {
+          const isSel = responsesArr[currentQIndex] === idx;
+          html += `<button class="option-btn ${isSel ? 'selected' : ''}" onclick="handleAnswer(${idx})">${opt}</button>`;
+        });
+      }
+
+      html += `<div class="btn-row">
+        <button class="btn-secondary" onclick="prevQuestion()" ${currentQIndex === 0 && isQchat ? 'disabled' : ''}>${t.back}</button>
+        <button class="btn-primary" onclick="nextQuestion()" ${(responsesArr[currentQIndex] === null) ? 'disabled' : ''}>
+          ${(isQchat && currentQIndex === 9) || (!isQchat && currentQIndex === 13) ? t.submit : t.next}
+        </button>
+      </div>`;
+
+      document.getElementById(isQchat ? "view-qchat" : "view-mchat").innerHTML = html;
+    }
+
+    function handleAnswer(val) {
+      if (activeSection === "qchat") qchatResponses[currentQIndex] = val;
+      else mchatResponses[currentQIndex] = val;
+      renderQuestion();
+    }
+
+    function prevQuestion() {
+      if (activeSection === "qchat") {
+        if (currentQIndex > 0) { currentQIndex--; renderQuestion(); }
+      } else {
+        if (currentQIndex === 0) {
+          activeSection = "qchat";
+          currentQIndex = 9;
+          showView("qchat");
+          renderQuestion();
+        } else {
+          currentQIndex--; renderQuestion();
+        }
+      }
+    }
+
+    function nextQuestion() {
+      if (activeSection === "qchat") {
+        if (currentQIndex < 9) { currentQIndex++; renderQuestion(); }
+        else { activeSection = "mchat"; currentQIndex = 0; showView("mchat"); renderQuestion(); }
+      } else {
+        if (currentQIndex < 13) { currentQIndex++; renderQuestion(); }
+        else { submitQuestionnaire(); }
+      }
+    }
+
+    function computeQchatLegacy() {
+      const map = {};
+      ALL_QUESTIONS.slice(0, 10).forEach((q, i) => {
+        const idx = qchatResponses[i];
+        map[String(i + 1)] = idx !== null ? q.en.opts[idx] : null;
+      });
+      return map;
+    }
+
+    async function submitQuestionnaire() {
+      isPreSummaryLoading = true;
+      showView("preSummary");
+      renderPreSummary();
+
+      try {
+        const legacy = computeQchatLegacy();
+        const mchat_answers = {};
+        ALL_QUESTIONS.slice(10).forEach((q, i) => {
+          const num = q.id.replace("a", "");
+          mchat_answers[num] = mchatResponses[i] === "yes" ? "Yes" : "No";
+        });
+
+        let genderVal = "other";
+        const g = currentChild.gender;
+        if (g === "Male" || g === "مرد") genderVal = "male";
+        if (g === "Female" || g === "عورت") genderVal = "female";
+
+        const payload = {
+          age_mons: currentChild.age_mons,
+          gender: genderVal,
+          jaundice: currentChild.jaundice,
+          family_mem_with_asd: currentChild.family_asd,
+          qchat_answers: legacy,
+          mchat_answers: mchat_answers
+        };
+
+        const res = await fetch(API_BASE_URL + "/api/screen/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "HTTP " + res.status);
+        predictionResult = data;
+
+        isPreSummaryLoading = false;
+        renderPreSummary();
+      } catch (err) {
+        predictionResult = null;
+        showView("results");
+        renderResults();
+        showToast("Error: " + err.message);
+      }
+    }
+
+    function renderPreSummary() {
+      const t = T[currentLang];
+      let html = buildHeader();
+      if (childPhotoBase64) {
+        html += `<img src="${childPhotoBase64}" style="width:80px;height:80px;object-fit:cover;border-radius:50%;display:block;margin:0 auto 10px;border:3px solid var(--primary)">`;
+        html += `<div style="text-align:center;font-weight:600;margin-bottom:20px;">${currentChild.name}</div>`;
+      }
+
+      if (isPreSummaryLoading) {
+        html += `<div class="spinner"></div><div style="text-align:center;color:var(--secondary-text);font-weight:500;">${t.processing}</div>`;
+      } else {
+        html += `<div style="text-align:center;font-size:18px;font-weight:600;color:var(--success);margin:30px 0;">✓ ${t.responsesRecorded}</div>
+                 <div class="btn-row">
+                   <button class="btn-secondary" onclick="currentUser=null;showView('home');renderHome();">${t.logout}</button>
+                   <button class="btn-primary" onclick="showView('results');renderResults();">${t.viewReport}</button>
+                 </div>`;
+      }
+      document.getElementById("view-preSummary").innerHTML = html;
+    }
+
+    function renderResults() {
+      const t = T[currentLang];
+      let html = `${buildHeader()}`;
+
+      if (childPhotoBase64) {
+        html += `<img src="${childPhotoBase64}" style="width:100px;height:100px;object-fit:cover;border-radius:50%;display:block;margin:0 auto 10px;border:3px solid var(--primary)">`;
+        html += `<div style="text-align:center;font-weight:700;font-size:18px;margin-bottom:24px;">${currentChild.name}</div>`;
+      }
+
+      if (!predictionResult) {
+        html += `<div style="color:var(--danger);text-align:center;padding:20px;background:#fee2e2;border-radius:12px;margin-bottom:20px;">An error occurred retrieving results.</div>`;
+      } else {
+        const score = predictionResult.screening_score !== undefined ? predictionResult.screening_score : (predictionResult.qchat_score || 0);
+        let riskClass = "risk-low";
+        if (score >= 4 && score <= 7) riskClass = "risk-medium";
+        if (score >= 8) riskClass = "risk-high";
+
+        let riskLvlStr = predictionResult.score_risk_level || predictionResult.qchat_risk_level || "Unknown";
+        let confStr = predictionResult.class_probabilities?.Autistic !== undefined ? (predictionResult.class_probabilities.Autistic * 100).toFixed(1) + "%" : (predictionResult.model_probability_asd !== undefined ? (predictionResult.model_probability_asd * 100).toFixed(1) + "%" : "N/A");
+        let recStr = predictionResult.referral_interpretation || predictionResult.qchat_referral_interpretation || "N/A";
+
+        html += `
+          <div class="result-card ${riskClass}">
+            <div class="result-label">${t.screeningScore}</div>
+            <div class="result-value">${score} / 24</div>
+          </div>
+          <div class="result-card ${riskClass}">
+            <div class="result-label">${t.riskLevel}</div>
+            <div class="result-value">${riskLvlStr}</div>
+          </div>
+          <div class="result-card">
+            <div class="result-label">${t.modelConfidence}</div>
+            <div class="result-value">${confStr}</div>
+          </div>
+          <div class="result-card">
+            <div class="result-label">${t.recommendation}</div>
+            <div class="result-value" style="font-size:14px;line-height:1.5;">${recStr}</div>
+          </div>
+          <div class="disclaimer-box">${t.disclaimer}</div>
+        `;
+      }
+
+      html += `
+        <div class="btn-row" style="flex-direction:column; gap:12px; margin-top:24px;">
+          <button class="btn-primary" id="downloadPdfBtn" onclick="downloadPDF()" ${!predictionResult ? 'disabled' : ''}>${t.downloadReport}</button>
+          <button class="btn-danger" onclick="currentUser=null;showView('home');renderHome();">${t.logout}</button>
+        </div>
+      `;
+      document.getElementById("view-results").innerHTML = html;
+    }
+
+    async function downloadPDF() {
+      const t = T[currentLang];
+      if (!predictionResult) { showToast("No result available."); return; }
+      const btn = document.getElementById("downloadPdfBtn");
+      btn.disabled = true;
+      btn.textContent = t.generating || "Generating...";
+      try {
+        const reportRes = await fetch(API_BASE_URL + "/api/report/llm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            inference_result: predictionResult,
+            language: currentLang
+          })
+        });
+        const reportData = await reportRes.json().catch(() => ({}));
+        if (!reportRes.ok) throw new Error(reportData.detail || "Report generation failed");
+
+        const res = await fetch(API_BASE_URL + "/api/report/pdf", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            inference_result: predictionResult,
+            report_text: reportData.report_text || predictionResult.referral_interpretation || predictionResult.qchat_referral_interpretation || "Assessment Report",
+            language: currentLang
+          })
+        });
+        if (!res.ok) throw new Error("PDF generation failed");
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = "aid-report-" + Date.now() + ".pdf";
+        document.body.appendChild(a); a.click();
+        window.URL.revokeObjectURL(url); document.body.removeChild(a);
+      } catch (err) {
+        showToast("PDF Error: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = t.downloadReport;
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      showView("home");
+      renderHome();
+    });
+  </script>
+</body>
+
+</html>

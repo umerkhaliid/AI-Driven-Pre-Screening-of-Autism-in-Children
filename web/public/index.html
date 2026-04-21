@@ -1,0 +1,2417 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AID - A Pre-Screening Tool for Autism Detection</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-gradient: linear-gradient(90deg, #c4f2ff 0%, #00abb3 50%, #f6bdb9 100%);
+        --card-bg: rgba(223, 244, 250, 0.9);
+        --primary: #77aeb5;
+        --primary-dark: #699fa7;
+        --primary-light: rgba(247, 252, 254, 0.74);
+        --secondary-text: #5f7880;
+        --heading: #123d44;
+        --border: rgba(113, 169, 176, 0.48);
+        --success: #4caf50;
+        --warning: #ff9800;
+        --danger: #e57373;
+        --info-bg: rgba(247, 252, 254, 0.78);
+        --info-border: rgba(113, 169, 176, 0.8);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 24px 16px;
+        background: var(--bg-gradient) fixed;
+        color: var(--heading);
+        font-family: "Inter", sans-serif;
+        overflow-x: hidden;
+      }
+
+      .page {
+        width: 100%;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+      }
+
+      .brain-art {
+        position: fixed;
+        top: 50%;
+        width: min(38vw, 360px);
+        min-width: 180px;
+        opacity: 0.9;
+        pointer-events: none;
+        z-index: 0;
+        filter: none;
+      }
+
+      .brain-art.left {
+        left: 5%;
+        transform: translateY(-50%);
+      }
+
+      .brain-art.right {
+        right: 5%;
+        transform: translateY(-50%) scaleX(-1);
+      }
+
+      .card {
+        width: min(90%, 560px);
+        background: var(--card-bg);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border: 1px solid rgba(255, 255, 255, 0.56);
+        border-radius: 30px;
+        padding: 36px 32px;
+        box-shadow: 0 28px 70px rgba(23, 77, 83, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+        position: relative;
+        z-index: 1;
+      }
+
+      .app-name {
+        font-size: 24px;
+        line-height: 1.25;
+        color: #6b7280;
+        font-weight: 600;
+      }
+
+      .app-subtitle {
+        font-size: 18px;
+        line-height: 1.35;
+        color: #9ca3af;
+      }
+
+      .view {
+        display: none;
+      }
+
+      .view.active {
+        display: block;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        font-size: 28px;
+        line-height: 1.2;
+        margin-bottom: 12px;
+      }
+
+      h2 {
+        font-size: 22px;
+        line-height: 1.25;
+        margin-bottom: 10px;
+      }
+
+      p {
+        color: var(--secondary-text);
+        line-height: 1.7;
+        font-size: 14px;
+      }
+
+      .btn-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+        flex-wrap: wrap;
+      }
+
+      .btn-row > button {
+        flex: 1 1 0;
+      }
+
+      button {
+        font-family: inherit;
+      }
+
+      .btn-primary,
+      .btn-secondary,
+      .btn-danger {
+        width: 100%;
+        border-radius: 14px;
+        padding: 14px 24px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+        border: 2px solid rgba(75, 98, 103, 0.55);
+        box-shadow: 0 10px 20px rgba(119, 174, 181, 0.18);
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        background: var(--primary-dark);
+        box-shadow: 0 12px 24px rgba(105, 159, 167, 0.22);
+      }
+
+      .btn-secondary {
+        background: rgba(235, 248, 251, 0.58);
+        color: var(--heading);
+        border: 2px solid rgba(113, 169, 176, 0.78);
+        box-shadow: 0 6px 14px rgba(119, 174, 181, 0.08);
+      }
+
+      .btn-secondary:hover:not(:disabled) {
+        background: rgba(248, 252, 254, 0.88);
+        box-shadow: 0 10px 18px rgba(119, 174, 181, 0.12);
+      }
+
+      .btn-danger {
+        background: var(--danger);
+        color: white;
+        border: none;
+      }
+
+      .btn-danger:hover:not(:disabled) {
+        filter: brightness(0.96);
+      }
+
+      .btn-disabled,
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--heading);
+        margin-bottom: 6px;
+      }
+
+      .field {
+        margin-top: 16px;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        font-size: 15px;
+        outline: none;
+        box-sizing: border-box;
+        color: var(--heading);
+        background: rgba(255, 255, 255, 0.74);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      }
+
+      input:focus,
+      select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(74, 155, 159, 0.15);
+      }
+
+      .field-error {
+        color: var(--danger);
+        font-size: 12px;
+        display: none;
+        margin-top: 4px;
+      }
+
+      .field-error.visible {
+        display: block;
+      }
+
+      .hint-text {
+        color: var(--secondary-text);
+        font-size: 11px;
+        margin-top: 6px;
+      }
+
+      .progress-track {
+        height: 6px;
+        background: #e5e7eb;
+        border-radius: 99px;
+        margin-bottom: 20px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: var(--primary);
+        border-radius: 99px;
+        transition: width 0.3s ease;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 99px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+      }
+
+      .badge-qchat {
+        background: #e0f7f7;
+        color: #2a7a7e;
+      }
+
+      .badge-mchat {
+        background: #ede9fe;
+        color: #5b21b6;
+      }
+
+      .badge-success {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+
+      .badge-warning {
+        background: #fff3e0;
+        color: #d97706;
+      }
+
+      .section-label {
+        color: var(--primary);
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 8px;
+      }
+
+      .info-box {
+        background: #fff9c4;
+        border-left: 4px solid #fbc02d;
+        border-radius: 8px;
+        padding: 14px 16px;
+        color: #5f4b00;
+        line-height: 1.6;
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+
+      .text-link {
+        background: transparent;
+        border: none;
+        color: var(--primary);
+        cursor: pointer;
+        padding: 0;
+        font-size: 14px;
+        text-decoration: underline;
+        margin-top: 14px;
+      }
+
+      .lang-switcher {
+        display: flex;
+        gap: 12px;
+        margin-top: 10px;
+      }
+
+      .lang-btn {
+        flex: 1;
+        height: 56px;
+        border-radius: 14px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid var(--border);
+      }
+
+      .lang-btn.selected {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+      }
+
+      .lang-btn:not(.selected) {
+        background: var(--primary-light);
+        color: var(--primary);
+      }
+
+      .profile-badge {
+        background: var(--primary);
+        color: white;
+        border-radius: 16px;
+        padding: 16px 24px;
+        text-align: center;
+        font-size: 20px;
+        font-weight: 700;
+        margin: 16px 0;
+      }
+
+      .photo-action-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .photo-picker {
+        min-height: 80px;
+        border-radius: 16px;
+        border: 2px dashed var(--border);
+        background: var(--primary-light);
+        color: var(--primary);
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 16px;
+      }
+
+      .photo-picker:hover {
+        border-color: var(--primary);
+      }
+
+      .hidden-input {
+        display: none;
+      }
+
+      .photo-preview {
+        display: block;
+        max-width: 100%;
+        max-height: 180px;
+        margin: 18px auto 0;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .camera-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 16px;
+      }
+      .camera-backdrop.open {
+        display: flex;
+      }
+      .camera-modal {
+        background: #111;
+        border-radius: 18px;
+        width: 100%;
+        max-width: 520px;
+        max-height: 95vh;
+        padding: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        color: #fff;
+      }
+      .camera-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+      }
+      .camera-close-btn {
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 22px;
+        cursor: pointer;
+        line-height: 1;
+      }
+      .camera-stage {
+        position: relative;
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+        aspect-ratio: 4 / 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .camera-stage video,
+      .camera-stage img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scaleX(-1); /* mirror for front-facing */
+      }
+      .camera-stage video[data-facing="environment"] {
+        transform: none;
+      }
+      .camera-hint {
+        color: #ccc;
+        font-size: 13px;
+        text-align: center;
+      }
+      .camera-error {
+        color: #ffb4b4;
+        font-size: 14px;
+        text-align: center;
+        padding: 16px;
+      }
+      .camera-controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .camera-controls.full {
+        grid-template-columns: 1fr;
+      }
+      .camera-btn {
+        padding: 14px 12px;
+        border-radius: 12px;
+        border: none;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .camera-btn-primary {
+        background: var(--primary);
+        color: #fff;
+      }
+      .camera-btn-secondary {
+        background: #2a2a2a;
+        color: #fff;
+      }
+      .camera-btn-danger {
+        background: #6b1b1b;
+        color: #fff;
+      }
+      .camera-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .child-photo-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 3px solid var(--primary);
+        object-fit: cover;
+        display: block;
+        margin: 0 auto 12px;
+      }
+
+      .child-photo-circle.small {
+        width: 100px;
+        height: 100px;
+      }
+
+      .child-name {
+        font-size: 18px;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 10px;
+      }
+
+      .question-text {
+        font-size: 17px;
+        line-height: 1.6;
+        color: var(--heading);
+        margin-bottom: 16px;
+      }
+
+      body[dir="rtl"] .question-text {
+        font-size: 19px;
+      }
+
+      .question-counter {
+        color: var(--secondary-text);
+        font-size: 13px;
+        margin-bottom: 10px;
+      }
+
+      .option-btn {
+        width: 100%;
+        text-align: left;
+        padding: 14px 18px;
+        margin: 6px 0;
+        border-radius: 12px;
+        border: 1.5px solid var(--border);
+        cursor: pointer;
+        font-size: 15px;
+        transition: all 0.15s;
+        background: var(--primary-light);
+        color: var(--heading);
+      }
+
+      .option-btn:hover {
+        border-color: var(--primary);
+        background: #d0efef;
+      }
+
+      .option-btn.selected {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+      }
+
+      body[dir="rtl"] .option-btn {
+        text-align: right;
+      }
+
+      .yesno-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .yn-btn {
+        flex: 1;
+        height: 64px;
+        border-radius: 14px;
+        border: 2px solid var(--border);
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.15s;
+      }
+
+      .yn-btn-yes {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border-color: #a5d6a7;
+      }
+
+      .yn-btn-yes.selected {
+        background: var(--success);
+        color: white;
+        border-color: var(--success);
+      }
+
+      .yn-btn-no {
+        background: #fdecea;
+        color: #c62828;
+        border-color: #ef9a9a;
+      }
+
+      .yn-btn-no.selected {
+        background: var(--danger);
+        color: white;
+        border-color: var(--danger);
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid var(--primary-light);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 20px auto;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .result-card {
+        background: rgba(248, 252, 254, 0.72);
+        border: 1.5px solid var(--border);
+        border-radius: 16px;
+        padding: 16px 20px;
+        margin: 10px 0;
+      }
+
+      .result-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--secondary-text);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .result-value {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--heading);
+        margin-top: 4px;
+      }
+
+      .result-value.small {
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .risk-low {
+        border-left: 4px solid #4caf50;
+      }
+
+      .risk-medium {
+        border-left: 4px solid #ff9800;
+      }
+
+      .risk-high {
+        border-left: 4px solid #e57373;
+      }
+
+      .disclaimer-box {
+        background: var(--info-bg);
+        border-left: 4px solid var(--info-border);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        padding: 14px 16px;
+        margin-top: 20px;
+        font-size: 13px;
+        line-height: 1.6;
+        color: var(--secondary-text);
+      }
+
+      body[dir="rtl"] .disclaimer-box,
+      body[dir="rtl"] .info-box {
+        border-left: none;
+        border-right: 4px solid var(--info-border);
+      }
+
+      body[dir="rtl"] .info-box {
+        border-right-color: #fbc02d;
+      }
+
+      body[dir="rtl"] .risk-low,
+      body[dir="rtl"] .risk-medium,
+      body[dir="rtl"] .risk-high {
+        border-left: none;
+      }
+
+      body[dir="rtl"] .risk-low {
+        border-right: 4px solid #4caf50;
+      }
+
+      body[dir="rtl"] .risk-medium {
+        border-right: 4px solid #ff9800;
+      }
+
+      body[dir="rtl"] .risk-high {
+        border-right: 4px solid #e57373;
+      }
+
+      .status-note {
+        text-align: center;
+        margin-top: 10px;
+      }
+
+      .centered {
+        text-align: center;
+      }
+
+      .secondary-copy {
+        color: var(--secondary-text);
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      #toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1a3c3e;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-size: 14px;
+        z-index: 9999;
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+        white-space: nowrap;
+        max-width: calc(100vw - 32px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      #toast.show {
+        opacity: 1;
+      }
+
+      #modalOverlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 8888;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      #modalOverlay .modal-box {
+        background: white;
+        border-radius: 20px;
+        padding: 32px;
+        max-width: 480px;
+        width: 100%;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+
+      @media (max-width: 600px) {
+        body {
+          padding: 14px 10px;
+        }
+
+        .card {
+          width: 95%;
+          padding: 24px 20px;
+        }
+
+        .app-name {
+          font-size: 20px;
+        }
+
+        .app-subtitle {
+          font-size: 16px;
+        }
+
+        .brain-art {
+          display: none;
+        }
+
+        .photo-action-row,
+        .lang-switcher,
+        .yesno-row {
+          grid-template-columns: 1fr;
+          flex-direction: column;
+        }
+
+        .btn-row > button {
+          flex: 1 1 100%;
+        }
+
+        #toast {
+          white-space: normal;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="brain-art left" aria-hidden="true">
+      <svg viewBox="0 0 200 200" fill="none" stroke="#2f3338" stroke-width="1.5">
+        <path d="M100 40 C60 40 30 65 30 100 C30 135 60 160 100 160 C140 160 170 135 170 100 C170 65 140 40 100 40Z"></path>
+        <path d="M100 40 C100 70 80 85 70 100 C80 115 100 130 100 160"></path>
+        <path d="M70 100 C50 90 40 75 45 60"></path>
+        <path d="M70 100 C50 110 40 125 45 140"></path>
+        <path d="M130 100 C150 90 160 75 155 60"></path>
+        <path d="M130 100 C150 110 160 125 155 140"></path>
+        <circle cx="100" cy="40" r="4" fill="#2f3338"></circle>
+        <circle cx="30" cy="100" r="3" fill="#2f3338"></circle>
+        <circle cx="170" cy="100" r="3" fill="#2f3338"></circle>
+        <circle cx="100" cy="160" r="4" fill="#2f3338"></circle>
+      </svg>
+    </div>
+
+    <div class="brain-art right" aria-hidden="true">
+      <svg viewBox="0 0 200 200" fill="none" stroke="#2f3338" stroke-width="1.5">
+        <path d="M100 40 C60 40 30 65 30 100 C30 135 60 160 100 160 C140 160 170 135 170 100 C170 65 140 40 100 40Z"></path>
+        <path d="M100 40 C100 70 80 85 70 100 C80 115 100 130 100 160"></path>
+        <path d="M70 100 C50 90 40 75 45 60"></path>
+        <path d="M70 100 C50 110 40 125 45 140"></path>
+        <path d="M130 100 C150 90 160 75 155 60"></path>
+        <path d="M130 100 C150 110 160 125 155 140"></path>
+        <circle cx="100" cy="40" r="4" fill="#2f3338"></circle>
+        <circle cx="30" cy="100" r="3" fill="#2f3338"></circle>
+        <circle cx="170" cy="100" r="3" fill="#2f3338"></circle>
+        <circle cx="100" cy="160" r="4" fill="#2f3338"></circle>
+      </svg>
+    </div>
+
+    <div class="page">
+      <div class="card">
+        <div id="view-home" class="view"></div>
+        <div id="view-language" class="view"></div>
+        <div id="view-auth" class="view"></div>
+        <div id="view-childInfo" class="view"></div>
+        <div id="view-profileCreated" class="view"></div>
+        <div id="view-photoUpload" class="view"></div>
+        <div id="view-photoResult" class="view"></div>
+        <div id="view-qchat" class="view"></div>
+        <div id="view-mchat" class="view"></div>
+        <div id="view-preSummary" class="view"></div>
+        <div id="view-results" class="view"></div>
+      </div>
+    </div>
+
+    <div id="cameraBackdrop" class="camera-backdrop" role="dialog" aria-modal="true">
+      <div class="camera-modal">
+        <div class="camera-header">
+          <span id="cameraTitle">Take a Photo</span>
+          <button type="button" class="camera-close-btn" onclick="closeCameraModal()" aria-label="Close">×</button>
+        </div>
+        <div class="camera-stage" id="cameraStage">
+          <video id="cameraVideo" autoplay playsinline muted></video>
+          <img id="cameraPreview" alt="Captured preview" style="display:none;" />
+          <div id="cameraErrorBox" class="camera-error" style="display:none;"></div>
+        </div>
+        <div class="camera-hint" id="cameraHint">Position the child's face inside the frame and tap Capture.</div>
+        <div class="camera-controls" id="cameraControls">
+          <button type="button" id="cameraSwitchBtn" class="camera-btn camera-btn-secondary" onclick="switchCameraFacing()">🔄 Switch Camera</button>
+          <button type="button" id="cameraCaptureBtn" class="camera-btn camera-btn-primary" onclick="capturePhoto()">📸 Capture</button>
+        </div>
+        <canvas id="cameraCanvas" style="display:none;"></canvas>
+      </div>
+    </div>
+
+    <div id="modalOverlay" onclick="handleModalBackdrop(event)">
+      <div class="modal-box">
+        <h2 id="modalTitle" style="color: #1a3c3e; margin-bottom: 16px"></h2>
+        <p id="modalBody" style="color: #4b5563; line-height: 1.7; font-size: 15px"></p>
+        <button
+          id="modalCloseBtn"
+          onclick="closeModal()"
+          style="
+            margin-top: 20px;
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: 2px solid rgba(75, 98, 103, 0.55);
+            border-radius: 14px;
+            font-size: 15px;
+            cursor: pointer;
+          "
+        >
+          Close
+        </button>
+      </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+      let currentLang = "en";
+      let currentView = "home";
+      let authMode = "register";
+      let currentUser = null;
+      let currentChild = { name: "", age_mons: 0, gender: "", jaundice: "", family_asd: "" };
+      let childPhotoBase64 = null;
+      let photoScreeningResult = null;
+      let qchatResponses = new Array(10).fill(null);
+      let mchatResponses = new Array(14).fill(null);
+      let currentQIndex = 0;
+      let activeSection = "qchat";
+      let predictionResult = null;
+      const API_BASE_URL = "http://localhost:8000";
+      let authDraft = { email: "", password: "" };
+      let preSummaryReady = false;
+
+      const T = {
+        en: {
+          appName: "Autism Intelligence Detection",
+          appSubtitle: "A Pre-Screening Tool For Autism Detection",
+          welcomeNote:
+            "⚠️ Note: This is only a screening tool for autism detection and NOT a diagnosis. Please consult a licensed clinician for professional evaluation.",
+          aboutUs: "About Us",
+          next: "Next →",
+          back: "← Back",
+          selectLang: "Select your preferred language",
+          createAccount: "Create Account",
+          login: "Log In",
+          emailLabel: "Email Address",
+          passwordLabel: "Password",
+          alreadyHave: "Already have an account? Log in",
+          dontHave: "Don't have an account? Create one",
+          childInfo: "Child Information",
+          childInfoSub: "These answers match the model inputs and are saved on this profile.",
+          nameLbl: "Child Name / Nickname (alphabets only)",
+          ageLbl: "Age in Months (48 to 144)",
+          ageHint: "Equivalent to 4 to 12 years",
+          genderLbl: "Gender",
+          genderOpts: ["Select...", "Male", "Female", "Not Defined"],
+          ynOpts: ["Select...", "Yes", "No"],
+          jaundiceLbl: "Jaundice",
+          familyLbl: "Family ASD",
+          save: "Save",
+          nameErr: "Name must contain alphabets only.",
+          ageErr: "Age must be between 48 and 144 months.",
+          genderErr: "Please select a gender.",
+          jaunErr: "Please answer the jaundice question.",
+          famErr: "Please answer the family ASD question.",
+          profileCreated: "Profile Successfully Created ✓",
+          startScreening: "Start Screening",
+          addMore: "Add Another Child",
+          logout: "Log Out",
+          facialTitle: "Facial Feature Based Screening",
+          facialSub: "Upload or take a clear front-facing photo of your child.",
+          uploadPic: "📁 Upload Picture",
+          takePic: "📷 Take Picture",
+          facialResult: "Facial Screening Result",
+          result: "Result:",
+          autisticLabel: "⚠️ Autistic Indicators Detected",
+          nonAutisticLabel: "✅ Non-Autistic",
+          autisticMsg:
+            "Autistic indicators were detected. You may continue with behavioural questionnaires for a more complete screening.",
+          nonAutisticMsg: "No autistic indicators were detected in the facial analysis.",
+          goToProfile: "Go to Profile",
+          continueQ: "Continue to Questionnaire",
+          qchatBadge: "Q-CHAT-10 — Section 1 of 2",
+          mchatBadge: "M-CHAT-R — Section 2 of 2",
+          questionOf: "Question",
+          of: "of",
+          submit: "Submit",
+          responsesRecorded: "Your responses have been recorded.",
+          viewReport: "View Report →",
+          screeningScore: "Screening Score",
+          riskLevel: "Risk Level",
+          modelConfidence: "Model Confidence",
+          recommendation: "Recommendation",
+          disclaimer:
+            "⚠️ Important: This is a screening tool only, not a diagnosis. Please consult a licensed clinician.",
+          downloadReport: "📥 Download Report",
+          aboutTitle: "About AID",
+          aboutText:
+            "AID was developed as a research-grade autism pre-screening tool combining facial analysis, Q-CHAT-10, and M-CHAT-R questionnaires to support early detection in children aged 4–12 years. This tool is intended for parents and caregivers and does not replace clinical diagnosis.",
+          close: "Close",
+          yesBtn: "✅ Yes",
+          noBtn: "❌ No",
+          processing: "Processing your responses...",
+          emailErr: "Please enter a valid email address.",
+          passwordErr: "Password must be at least 6 characters.",
+          selectAnswer: "Please select an answer.",
+          choosePhoto: "Please upload or take a photo first.",
+          photoReadErr: "Could not read the selected image.",
+          photoFallback: "Photo screening could not complete. A fallback non-autistic result was used.",
+          retry: "Retry Submission",
+          returnToQuestions: "Return to Questions",
+          noResultState: "We could not generate a screening result from the server response.",
+          generating: "Generating...",
+          photoSelected: "Photo selected successfully.",
+          profileNameMissing: "Please create a child profile first.",
+          home: "Home",
+          cameraTitle: "Take a Photo",
+          cameraHint: "Position the child's face inside the frame and tap Capture.",
+          cameraCapture: "📸 Capture",
+          cameraRetake: "↺ Retake",
+          cameraUse: "✓ Use Photo",
+          cameraSwitch: "🔄 Switch Camera",
+          cameraCancel: "Cancel",
+          cameraPermission: "Camera access was denied. Please allow camera permission in your browser and try again.",
+          cameraUnavailable: "No camera was found on this device.",
+          cameraStartError: "Could not start the camera. Try refreshing the page or use upload instead.",
+          cameraCaptureError: "Could not capture the frame. Please try again.",
+          cameraCaptured: "Photo captured.",
+        },
+        ur: {
+          appName: "آٹزم انٹیلیجنس ڈیٹیکشن",
+          appSubtitle: "آٹزم کا ابتدائی معائنہ ٹول",
+          welcomeNote:
+            "⚠️ نوٹ: یہ صرف ایک اسکریننگ ٹول ہے، تشخیص نہیں۔ براہ کرم کسی لائسنس یافتہ ماہر ڈاکٹر سے مشورہ کریں۔",
+          aboutUs: "ہمارے بارے میں",
+          next: "اگلا ←",
+          back: "→ واپس",
+          selectLang: "اپنی پسندیدہ زبان منتخب کریں",
+          createAccount: "اکاؤنٹ بنائیں",
+          login: "لاگ ان",
+          emailLabel: "ای میل پتہ",
+          passwordLabel: "پاس ورڈ",
+          alreadyHave: "کیا آپ کا پہلے سے اکاؤنٹ ہے؟ لاگ ان کریں",
+          dontHave: "اکاؤنٹ نہیں ہے؟ بنائیں",
+          childInfo: "بچے کی معلومات",
+          childInfoSub: "یہ جوابات ماڈل کے ان پٹ سے میل کھاتے ہیں اور اس پروفائل میں محفوظ ہوں گے۔",
+          nameLbl: "بچے کا نام / عرفی نام (صرف حروف)",
+          ageLbl: "عمر مہینوں میں (48 تا 144)",
+          ageHint: "یعنی 4 سے 12 سال",
+          genderLbl: "جنس",
+          genderOpts: ["منتخب کریں...", "مرد", "عورت", "غیر متعین"],
+          ynOpts: ["منتخب کریں...", "ہاں", "نہیں"],
+          jaundiceLbl: "یرقان",
+          familyLbl: "خاندانی ASD",
+          save: "محفوظ کریں",
+          nameErr: "نام میں صرف حروف ہونے چاہئیں۔",
+          ageErr: "عمر 48 تا 144 مہینوں کے درمیان ہونی چاہیے۔",
+          genderErr: "براہ کرم جنس منتخب کریں۔",
+          jaunErr: "براہ کرم یرقان کا جواب دیں۔",
+          famErr: "براہ کرم خاندانی ASD کا جواب دیں۔",
+          profileCreated: "پروفائل کامیابی سے بن گئی ✓",
+          startScreening: "اسکریننگ شروع کریں",
+          addMore: "مزید بچہ شامل کریں",
+          logout: "لاگ آؤٹ",
+          facialTitle: "چہرے کی خصوصیات پر مبنی اسکریننگ",
+          facialSub: "اپنے بچے کی واضح سامنے والی تصویر اپلوڈ کریں یا کھینچیں۔",
+          uploadPic: "📁 تصویر اپلوڈ کریں",
+          takePic: "📷 تصویر کھینچیں",
+          facialResult: "چہرے کی اسکریننگ کا نتیجہ",
+          result: "نتیجہ:",
+          autisticLabel: "⚠️ آٹسٹک علامات پائی گئیں",
+          nonAutisticLabel: "✅ غیر آٹسٹک",
+          autisticMsg:
+            "چہرے کے تجزیے میں آٹسٹک علامات پائی گئیں۔ مزید مکمل اسکریننگ کے لیے رویے کے سوالنامے جاری رکھیں۔",
+          nonAutisticMsg: "چہرے کے تجزیے میں کوئی آٹسٹک علامات نہیں پائی گئیں۔",
+          goToProfile: "پروفائل پر جائیں",
+          continueQ: "سوالنامے پر جائیں",
+          qchatBadge: "Q-CHAT-10 — حصہ 1 از 2",
+          mchatBadge: "M-CHAT-R — حصہ 2 از 2",
+          questionOf: "سوال",
+          of: "از",
+          submit: "جمع کریں",
+          responsesRecorded: "آپ کے جوابات محفوظ ہو گئے۔",
+          viewReport: "رپورٹ دیکھیں ←",
+          screeningScore: "اسکریننگ اسکور",
+          riskLevel: "خطرے کی سطح",
+          modelConfidence: "ماڈل کا اعتماد",
+          recommendation: "سفارش",
+          disclaimer:
+            "⚠️ اہم: یہ صرف ایک اسکریننگ ٹول ہے، تشخیص نہیں۔ براہ کرم ماہر ڈاکٹر سے رجوع کریں۔",
+          downloadReport: "📥 رپورٹ ڈاؤنلوڈ کریں",
+          aboutTitle: "AID کے بارے میں",
+          aboutText:
+            "AID ایک تحقیقی سطح کا آٹزم پری اسکریننگ ٹول ہے جو چہرے کے تجزیے، Q-CHAT-10 اور M-CHAT-R سوالناموں کو یکجا کرتا ہے۔ یہ والدین اور نگہداشت کنندگان کے لیے ہے اور طبی تشخیص کی جگہ نہیں لیتا۔",
+          close: "بند کریں",
+          yesBtn: "✅ ہاں",
+          noBtn: "❌ نہیں",
+          processing: "جوابات پر کارروائی ہو رہی ہے...",
+          emailErr: "براہ کرم درست ای میل پتہ درج کریں۔",
+          passwordErr: "پاس ورڈ کم از کم 6 حروف پر مشتمل ہونا چاہیے۔",
+          selectAnswer: "براہ کرم ایک جواب منتخب کریں۔",
+          choosePhoto: "براہ کرم پہلے تصویر اپلوڈ کریں یا کھینچیں۔",
+          photoReadErr: "منتخب کی گئی تصویر پڑھی نہیں جا سکی۔",
+          photoFallback: "تصویری اسکریننگ مکمل نہ ہو سکی۔ متبادل طور پر غیر آٹسٹک نتیجہ استعمال کیا گیا۔",
+          retry: "دوبارہ جمع کریں",
+          returnToQuestions: "سوالات پر واپس جائیں",
+          noResultState: "سرور کے جواب سے اسکریننگ کا نتیجہ تیار نہیں ہو سکا۔",
+          generating: "تیار ہو رہا ہے...",
+          photoSelected: "تصویر کامیابی سے منتخب ہو گئی۔",
+          profileNameMissing: "براہ کرم پہلے بچے کی پروفائل بنائیں۔",
+          home: "ہوم",
+          cameraTitle: "تصویر کھینچیں",
+          cameraHint: "بچے کے چہرے کو فریم کے اندر رکھیں اور کیپچر پر کلک کریں۔",
+          cameraCapture: "📸 کیپچر کریں",
+          cameraRetake: "↺ دوبارہ کھینچیں",
+          cameraUse: "✓ تصویر استعمال کریں",
+          cameraSwitch: "🔄 کیمرہ تبدیل کریں",
+          cameraCancel: "منسوخ کریں",
+          cameraPermission: "کیمرے تک رسائی مسترد کر دی گئی۔ براہ کرم اپنے براؤزر میں کیمرے کی اجازت دیں اور دوبارہ کوشش کریں۔",
+          cameraUnavailable: "اس آلے پر کوئی کیمرہ نہیں ملا۔",
+          cameraStartError: "کیمرہ شروع نہیں ہو سکا۔ براہ کرم صفحہ دوبارہ لوڈ کریں یا اپلوڈ آپشن استعمال کریں۔",
+          cameraCaptureError: "تصویر کھینچی نہیں جا سکی۔ براہ کرم دوبارہ کوشش کریں۔",
+          cameraCaptured: "تصویر کھینچ لی گئی۔",
+        },
+      };
+
+      const ALL_QUESTIONS = [
+        {
+          id: "a1",
+          section: "qchat",
+          type: "freq5",
+          atRisk: [3, 4],
+          en: {
+            text: "Does your child look at you when you call his/her name?",
+            opts: ["Always", "Usually", "Sometimes", "Rarely", "Never"],
+          },
+          ur: {
+            text: "کیا آپ کا بچہ آپ کی طرف دیکھتا ہے جب آپ اس کا نام پکارتے ہیں؟",
+            opts: ["ہمیشہ", "عام طور پر", "کبھی کبھی", "شاذ و نادر", "کبھی نہیں"],
+          },
+        },
+        {
+          id: "a2",
+          section: "qchat",
+          type: "scale5",
+          atRisk: [3, 4],
+          en: {
+            text: "How easy is it for you to get eye contact with your child?",
+            opts: ["Very easy", "Quite easy", "Quite difficult", "Very difficult", "Impossible"],
+          },
+          ur: {
+            text: "آپ کے بچے سے آنکھ ملانا کتنا آسان ہے؟",
+            opts: ["بہت آسان", "کافی آسان", "کافی مشکل", "بہت مشکل", "ناممکن"],
+          },
+        },
+        {
+          id: "a3",
+          section: "qchat",
+          type: "freq5",
+          atRisk: [3, 4],
+          en: {
+            text: "Does your child point to indicate that s/he wants something? (e.g., a toy out of reach)",
+            opts: [
+              "Many times a day",
+              "A few times a day",
+              "A few times a week",
+              "Less than once a week",
+              "Never",
+            ],
+          },
+          ur: {
+            text: "کیا آپ کا بچہ کسی چیز کی طرف اشارہ کرتا ہے جب وہ اسے چاہتا ہو؟ (مثلاً پہنچ سے باہر کھلونا)",
+            opts: [
+              "دن میں کئی بار",
+              "دن میں چند بار",
+              "ہفتے میں چند بار",
+              "ہفتے میں ایک بار سے کم",
+              "کبھی نہیں",
+            ],
+          },
+        },
+        {
+          id: "a4",
+          section: "qchat",
+          type: "freq5",
+          atRisk: [3, 4],
+          en: {
+            text: "Does your child point to share interest with you? (e.g., pointing at an interesting sight)",
+            opts: [
+              "Many times a day",
+              "A few times a day",
+              "A few times a week",
+              "Less than once a week",
+              "Never",
+            ],
+          },
+          ur: {
+            text: "کیا آپ کا بچہ آپ کے ساتھ دلچسپی شیئر کرنے کے لیے اشارہ کرتا ہے؟ (مثلاً کسی دلچسپ چیز کی طرف اشارہ کرنا)",
+            opts: [
+              "دن میں کئی بار",
+              "دن میں چند بار",
+              "ہفتے میں چند بار",
+              "ہفتے میں ایک بار سے کم",
+              "کبھی نہیں",
+            ],
+          },
+        },
+        {
+          id: "a5",
+          section: "qchat",
+          type: "freq5",
+          atRisk: [3, 4],
+          en: {
+            text: "Does your child pretend? (e.g., care for dolls, talk on a toy phone)",
+            opts: [
+              "Many times a day",
+              "A few times a day",
+              "A few times a week",
+              "Less than once a week",
+              "Never",
+            ],
+          },
+          ur: {
+            text: "کیا آپ کا بچہ بہانہ کرتا ہے؟ (مثلاً گڑیا کی دیکھ بھال، کھلونا فون پر بات)",
+            opts: [
+              "دن میں کئی بار",
+              "دن میں چند بار",
+              "ہفتے میں چند بار",
+              "ہفتے میں ایک بار سے کم",
+              "کبھی نہیں",
+            ],
+          },
+        },
+        {
+          id: "a6",
+          section: "qchat",
+          type: "freq5",
+          atRisk: [3, 4],
+          en: {
+            text: "Does your child follow where you're looking?",
+            opts: [
+              "Many times a day",
+              "A few times a day",
+              "A few times a week",
+              "Less than once a week",
+              "Never",
+            ],
+          },
+          ur: {
+            text: "کیا آپ کا بچہ وہاں دیکھتا ہے جہاں آپ دیکھ رہے ہوں؟",
+            opts: [
+              "دن میں کئی بار",
+              "دن میں چند بار",
+              "ہفتے میں چند بار",
+              "ہفتے میں ایک بار سے کم",
+              "کبھی نہیں",
+            ],
+          },
+        },
+        {
+          id: "a7",
+          section: "qchat",
+          type: "freq5",
+          atRisk: [3, 4],
+          en: {
+            text: "Does your child comfort upset family members? (e.g., tries to hug a crying sibling)",
+            opts: ["Always", "Usually", "Sometimes", "Rarely", "Never"],
+          },
+          ur: {
+            text: "کیا آپ کا بچہ پریشان خاندانی افراد کو تسلی دیتا ہے؟ (مثلاً روتے ہوئے بہن بھائی کو گلے لگانا)",
+            opts: ["ہمیشہ", "عام طور پر", "کبھی کبھی", "شاذ و نادر", "کبھی نہیں"],
+          },
+        },
+        {
+          id: "a8",
+          section: "qchat",
+          type: "scale5",
+          atRisk: [3, 4],
+          en: {
+            text: "Would you describe your child's first words as typical?",
+            opts: [
+              "Very typical",
+              "Quite typical",
+              "Slightly unusual",
+              "Very unusual",
+              "Has not started speaking",
+            ],
+          },
+          ur: {
+            text: "کیا آپ کے بچے کے پہلے الفاظ معمول کے مطابق تھے؟",
+            opts: [
+              "بالکل معمول",
+              "کافی معمول",
+              "تھوڑے غیر معمولی",
+              "بہت غیر معمولی",
+              "ابھی بولنا شروع نہیں کیا",
+            ],
+          },
+        },
+        {
+          id: "a9",
+          section: "qchat",
+          type: "freq5",
+          atRisk: [3, 4],
+          en: {
+            text: "Does your child use simple gestures? (e.g., wave goodbye, clap)",
+            opts: [
+              "Many times a day",
+              "A few times a day",
+              "A few times a week",
+              "Less than once a week",
+              "Never",
+            ],
+          },
+          ur: {
+            text: "کیا آپ کا بچہ سادہ اشارے استعمال کرتا ہے؟ (مثلاً الوداع کہنا، تالی بجانا)",
+            opts: [
+              "دن میں کئی بار",
+              "دن میں چند بار",
+              "ہفتے میں چند بار",
+              "ہفتے میں ایک بار سے کم",
+              "کبھی نہیں",
+            ],
+          },
+        },
+        {
+          id: "a10",
+          section: "qchat",
+          type: "freq5",
+          atRisk: [0, 1],
+          en: {
+            text: "Does your child stare at nothing with no apparent purpose?",
+            opts: [
+              "Many times a day",
+              "A few times a day",
+              "A few times a week",
+              "Less than once a week",
+              "Never",
+            ],
+          },
+          ur: {
+            text: "کیا آپ کا بچہ بغیر کسی مقصد کے خلا میں گھورتا ہے؟",
+            opts: [
+              "دن میں کئی بار",
+              "دن میں چند بار",
+              "ہفتے میں چند بار",
+              "ہفتے میں ایک بار سے کم",
+              "کبھی نہیں",
+            ],
+          },
+        },
+        {
+          id: "a11",
+          section: "mchat",
+          type: "yesno",
+          atRisk: ["no"],
+          en: { text: "If you point at something across the room, does your child look at it?" },
+          ur: { text: "اگر آپ کمرے میں کسی چیز کی طرف اشارہ کریں، تو کیا آپ کا بچہ اسے دیکھتا ہے؟" },
+        },
+        {
+          id: "a12",
+          section: "mchat",
+          type: "yesno",
+          atRisk: ["yes"],
+          en: { text: "Have you ever wondered if your child might be deaf?" },
+          ur: { text: "کیا آپ نے کبھی سوچا ہے کہ آپ کا بچہ بہرہ ہو سکتا ہے؟" },
+        },
+        {
+          id: "a13",
+          section: "mchat",
+          type: "yesno",
+          atRisk: ["no"],
+          en: { text: "Does your child like climbing on things? (e.g., furniture, playground equipment)" },
+          ur: { text: "کیا آپ کا بچہ چیزوں پر چڑھنا پسند کرتا ہے؟ (مثلاً فرنیچر، کھیل کا میدان)" },
+        },
+        {
+          id: "a14",
+          section: "mchat",
+          type: "yesno",
+          atRisk: ["yes"],
+          en: { text: "Does your child make unusual finger movements near his/her eyes?" },
+          ur: { text: "کیا آپ کا بچہ اپنی آنکھوں کے قریب غیر معمولی انگلیوں کی حرکات کرتا ہے؟" },
+        },
+        {
+          id: "a15",
+          section: "mchat",
+          type: "yesno",
+          atRisk: ["no"],
+          en: { text: "Is your child interested in other children?" },
+          ur: { text: "کیا آپ کا بچہ دوسرے بچوں میں دلچسپی رکھتا ہے؟" },
+        },
+        {
+          id: "a16",
+          section: "mchat",
+          type: "yesno",
+          atRisk: ["no"],
+          en: { text: "Does your child show you things by bringing them to you or holding them up?" },
+          ur: { text: "کیا آپ کا بچہ آپ کو چیزیں لا کر یا اٹھا کر دکھاتا ہے؟" },
+        },
+        {
+          id: "a17",
+          section: "mchat",
+          type: "yesno",
+          atRisk: ["no"],
+          en: { text: "When you smile at your child, does he/she smile back at you?" },
+          ur: { text: "جب آپ اپنے بچے پر مسکراتے ہیں، تو کیا وہ آپ پر مسکراتا ہے؟" },
+        },
+        {
+          id: "a18",
+          section: "mchat",
+          type: "yesno",
+          atRisk: ["yes"],
+          en: { text: "Does your child get upset by everyday noises? (e.g., vacuum cleaner, loud music)" },
+          ur: { text: "کیا آپ کا بچہ روزمرہ کی آوازوں سے پریشان ہو جاتا ہے؟ (مثلاً ویکیوم کلینر، تیز موسیقی)" },
+        },
+        {
+          id: "a19",
+          section: "mchat",
+          type: "yesno",
+          atRisk: ["no"],
+          en: { text: "Does your child walk?" },
+          ur: { text: "کیا آپ کا بچہ چلتا ہے؟" },
+        },
+        {
+          id: "a20",
+          section: "mchat",
+          type: "yesno",
+          atRisk: ["no"],
+          en: { text: "Does your child try to copy what you do? (e.g., wave, clap, make a face)" },
+          ur: { text: "کیا آپ کا بچہ آپ کی نقل کرنے کی کوشش کرتا ہے؟ (مثلاً ہاتھ ہلانا، تالی بجانا، منہ بنانا)" },
+        },
+        {
+          id: "a21",
+          section: "mchat",
+          type: "yesno",
+          atRisk: ["no"],
+          en: { text: "Does your child try to get you to watch him/her? (e.g., says 'Look!' or tugs your sleeve)" },
+          ur: { text: "کیا آپ کا بچہ آپ کو اپنی طرف متوجہ کرنے کی کوشش کرتا ہے؟ (مثلاً 'دیکھو!' کہنا یا آستین کھینچنا)" },
+        },
+        {
+          id: "a22",
+          section: "mchat",
+          type: "yesno",
+          atRisk: ["no"],
+          en: { text: "Does your child understand when you tell him/her to do something?" },
+          ur: { text: "کیا آپ کا بچہ سمجھتا ہے جب آپ اسے کچھ کرنے کو کہتے ہیں؟" },
+        },
+        {
+          id: "a23",
+          section: "mchat",
+          type: "yesno",
+          atRisk: ["no"],
+          en: { text: "Does your child look at your face to check your reaction when something is new?" },
+          ur: { text: "کیا آپ کا بچہ کوئی نئی چیز دیکھ کر آپ کے چہرے کا رد عمل جانچتا ہے؟" },
+        },
+        {
+          id: "a24",
+          section: "mchat",
+          type: "yesno",
+          atRisk: ["no"],
+          en: { text: "Does your child like movement activities? (e.g., being bounced on your knee, swings)" },
+          ur: { text: "کیا آپ کا بچہ حرکت والی سرگرمیاں پسند کرتا ہے؟ (مثلاً گھٹنے پر اچھلنا، جھولا)" },
+        },
+      ];
+
+      const ALL_VIEWS = [
+        "home",
+        "language",
+        "auth",
+        "childInfo",
+        "profileCreated",
+        "photoUpload",
+        "photoResult",
+        "qchat",
+        "mchat",
+        "preSummary",
+        "results",
+      ];
+
+      function httpErrorMessage(data, fallback) {
+        const d = data && data.detail;
+        if (typeof d === "string") return d;
+        if (Array.isArray(d)) return d.map((item) => (item && item.msg ? item.msg : JSON.stringify(item))).join("; ");
+        if (data && typeof data.error === "string") return data.error;
+        return fallback;
+      }
+
+      function escapeHtml(value) {
+        return String(value == null ? "" : value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function setLanguage(lang) {
+        currentLang = lang;
+        document.documentElement.lang = lang === "ur" ? "ur" : "en";
+        if (lang === "ur") {
+          document.body.setAttribute("dir", "rtl");
+          document.body.style.fontFamily = "'Noto Nastaliq Urdu', serif";
+        } else {
+          document.body.setAttribute("dir", "ltr");
+          document.body.style.fontFamily = "'Inter', sans-serif";
+        }
+        if (document.getElementById("modalOverlay").style.display === "flex") {
+          showModal("about");
+        }
+        renderCurrentView();
+      }
+
+      function showView(id) {
+        ALL_VIEWS.forEach((v) => {
+          const node = document.getElementById("view-" + v);
+          node.classList.toggle("active", v === id);
+        });
+        currentView = id;
+      }
+
+      function renderCurrentView() {
+        const map = {
+          home: renderHome,
+          language: renderLanguage,
+          auth: renderAuth,
+          childInfo: renderChildInfo,
+          profileCreated: renderProfileCreated,
+          photoUpload: renderPhotoUpload,
+          photoResult: renderPhotoResult,
+          qchat: renderQuestion,
+          mchat: renderQuestion,
+          preSummary: renderPreSummary,
+          results: renderResults,
+        };
+        if (map[currentView]) map[currentView]();
+      }
+
+      function navigateTo(id) {
+        showView(id);
+        renderCurrentView();
+      }
+
+      function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => t.classList.remove("show"), 3000);
+      }
+
+      function showModal() {
+        const t = T[currentLang];
+        document.getElementById("modalTitle").textContent = t.aboutTitle;
+        document.getElementById("modalBody").textContent = t.aboutText;
+        document.getElementById("modalCloseBtn").textContent = t.close;
+        document.getElementById("modalOverlay").style.display = "flex";
+      }
+
+      function closeModal() {
+        document.getElementById("modalOverlay").style.display = "none";
+      }
+
+      function handleModalBackdrop(event) {
+        if (event.target.id === "modalOverlay") closeModal();
+      }
+
+      function showFieldError(id, msg) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.add("visible");
+      }
+
+      function clearFieldError(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = "";
+        el.classList.remove("visible");
+      }
+
+      function clearAllErrors() {
+        document.querySelectorAll(".field-error").forEach((el) => {
+          el.textContent = "";
+          el.classList.remove("visible");
+        });
+      }
+
+      function buildHeader() {
+        const t = T[currentLang];
+        return `
+          <div style="text-align:center; margin-bottom:20px;">
+            <div style="width:44px;height:44px;background:var(--primary);border-radius:10px;display:inline-flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;margin-bottom:8px;">AID</div>
+            <div class="app-name">${t.appName}</div>
+            <div class="app-subtitle">${t.appSubtitle}</div>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--border);margin-bottom:20px;">
+        `;
+      }
+
+      function renderHome() {
+        const t = T[currentLang];
+        document.getElementById("view-home").innerHTML = `
+          ${buildHeader()}
+          <div class="info-box">${t.welcomeNote}</div>
+          <div class="btn-row">
+            <button type="button" class="btn-secondary" onclick="showModal()">${t.aboutUs}</button>
+            <button type="button" class="btn-primary" onclick="navigateTo('language')">${t.next}</button>
+          </div>
+        `;
+      }
+
+      function renderLanguage() {
+        const t = T[currentLang];
+        document.getElementById("view-language").innerHTML = `
+          ${buildHeader()}
+          <h1>${t.selectLang}</h1>
+          <div class="lang-switcher">
+            <button type="button" class="lang-btn ${currentLang === "en" ? "selected" : ""}" onclick="setLanguage('en')">🇬🇧 English</button>
+            <button type="button" class="lang-btn ${currentLang === "ur" ? "selected" : ""}" onclick="setLanguage('ur')">🇵🇰 اردو</button>
+          </div>
+          <div class="btn-row">
+            <button type="button" class="btn-secondary" onclick="navigateTo('home')">${t.back}</button>
+            <button type="button" class="btn-primary" onclick="navigateTo('auth')">${t.next}</button>
+          </div>
+        `;
+      }
+
+      function updateAuthDraft(field, value) {
+        authDraft[field] = value;
+        clearFieldError("authError");
+      }
+
+      function toggleAuthMode() {
+        authMode = authMode === "register" ? "login" : "register";
+        renderAuth();
+      }
+
+      function renderAuth() {
+        const t = T[currentLang];
+        const isRegister = authMode === "register";
+        document.getElementById("view-auth").innerHTML = `
+          ${buildHeader()}
+          <h1>${isRegister ? t.createAccount : t.login}</h1>
+          <div class="field">
+            <label for="authEmail">${t.emailLabel}</label>
+            <input id="authEmail" type="email" value="${escapeHtml(authDraft.email)}" oninput="updateAuthDraft('email', this.value)" />
+          </div>
+          <div class="field">
+            <label for="authPassword">${t.passwordLabel}</label>
+            <input id="authPassword" type="password" value="${escapeHtml(authDraft.password)}" oninput="updateAuthDraft('password', this.value)" />
+          </div>
+          <div id="authError" class="field-error"></div>
+          <button type="button" class="text-link" onclick="toggleAuthMode()">${isRegister ? t.alreadyHave : t.dontHave}</button>
+          <div class="btn-row">
+            <button type="button" class="btn-secondary" onclick="navigateTo('language')">${t.back}</button>
+            <button type="button" class="btn-primary" onclick="handleAuthSubmit()">${t.next}</button>
+          </div>
+        `;
+      }
+
+      function handleAuthSubmit() {
+        const t = T[currentLang];
+        clearFieldError("authError");
+        const email = authDraft.email.trim();
+        const password = authDraft.password;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          showFieldError("authError", t.emailErr);
+          return;
+        }
+        if (password.length < 6) {
+          showFieldError("authError", t.passwordErr);
+          return;
+        }
+        currentUser = { email: email };
+        navigateTo("childInfo");
+      }
+
+      function updateChildField(field, value) {
+        currentChild[field] = value;
+      }
+
+      function renderChildInfo() {
+        const t = T[currentLang];
+        const genderValue = currentChild.gender || "";
+        const jaundiceValue = currentChild.jaundice || "";
+        const familyValue = currentChild.family_asd || "";
+        document.getElementById("view-childInfo").innerHTML = `
+          ${buildHeader()}
+          <div class="section-label">${t.childInfo}</div>
+          <p>${t.childInfoSub}</p>
+
+          <div class="field">
+            <label for="childName">${t.nameLbl}</label>
+            <input id="childName" type="text" value="${escapeHtml(currentChild.name || "")}" oninput="updateChildField('name', this.value); clearFieldError('nameErr')" />
+            <div id="nameErr" class="field-error"></div>
+          </div>
+
+          <div class="field">
+            <label for="childAge">${t.ageLbl}</label>
+            <input id="childAge" type="number" min="48" max="144" value="${escapeHtml(currentChild.age_mons || "")}" oninput="updateChildField('age_mons', this.value); clearFieldError('ageErr')" />
+            <div class="hint-text">${t.ageHint}</div>
+            <div id="ageErr" class="field-error"></div>
+          </div>
+
+          <div class="field">
+            <label for="childGender">${t.genderLbl}</label>
+            <select id="childGender" onchange="updateChildField('gender', this.value); clearFieldError('genderErr')">
+              <option value="">${t.genderOpts[0]}</option>
+              <option value="male" ${genderValue === "male" ? "selected" : ""}>${t.genderOpts[1]}</option>
+              <option value="female" ${genderValue === "female" ? "selected" : ""}>${t.genderOpts[2]}</option>
+              <option value="other" ${genderValue === "other" ? "selected" : ""}>${t.genderOpts[3]}</option>
+            </select>
+            <div id="genderErr" class="field-error"></div>
+          </div>
+
+          <div class="field">
+            <label for="childJaundice">${t.jaundiceLbl}</label>
+            <select id="childJaundice" onchange="updateChildField('jaundice', this.value); clearFieldError('jaunErr')">
+              <option value="">${t.ynOpts[0]}</option>
+              <option value="yes" ${jaundiceValue === "yes" ? "selected" : ""}>${t.ynOpts[1]}</option>
+              <option value="no" ${jaundiceValue === "no" ? "selected" : ""}>${t.ynOpts[2]}</option>
+            </select>
+            <div id="jaunErr" class="field-error"></div>
+          </div>
+
+          <div class="field">
+            <label for="childFamily">${t.familyLbl}</label>
+            <select id="childFamily" onchange="updateChildField('family_asd', this.value); clearFieldError('famErr')">
+              <option value="">${t.ynOpts[0]}</option>
+              <option value="yes" ${familyValue === "yes" ? "selected" : ""}>${t.ynOpts[1]}</option>
+              <option value="no" ${familyValue === "no" ? "selected" : ""}>${t.ynOpts[2]}</option>
+            </select>
+            <div id="famErr" class="field-error"></div>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn-primary" onclick="handleChildInfoSubmit()">${t.save}</button>
+            <button type="button" class="btn-primary" onclick="handleChildInfoSubmit()">${t.next}</button>
+          </div>
+        `;
+      }
+
+      function handleChildInfoSubmit() {
+        const t = T[currentLang];
+        clearAllErrors();
+        const name = String(currentChild.name || "").trim();
+        const age = Number(currentChild.age_mons);
+        const nameRegex = /^[a-zA-Z\u0600-\u06FF\s]+$/;
+        let valid = true;
+
+        if (!name || !nameRegex.test(name)) {
+          showFieldError("nameErr", t.nameErr);
+          valid = false;
+        }
+        if (!Number.isInteger(age) || age < 48 || age > 144) {
+          showFieldError("ageErr", t.ageErr);
+          valid = false;
+        }
+        if (!currentChild.gender) {
+          showFieldError("genderErr", t.genderErr);
+          valid = false;
+        }
+        if (!currentChild.jaundice) {
+          showFieldError("jaunErr", t.jaunErr);
+          valid = false;
+        }
+        if (!currentChild.family_asd) {
+          showFieldError("famErr", t.famErr);
+          valid = false;
+        }
+        if (!valid) return;
+
+        currentChild.name = name;
+        currentChild.age_mons = age;
+        navigateTo("profileCreated");
+      }
+
+      function renderProfileCreated() {
+        const t = T[currentLang];
+        document.getElementById("view-profileCreated").innerHTML = `
+          ${buildHeader()}
+          <div class="centered" style="font-size:48px;color:var(--primary);">✓</div>
+          <h2 class="centered">${t.profileCreated}</h2>
+          <div class="profile-badge">${escapeHtml(currentChild.name || "-")}</div>
+          <div class="btn-row">
+            <button type="button" class="btn-primary" onclick="navigateTo('photoUpload')">${t.startScreening}</button>
+          </div>
+          <div class="btn-row">
+            <button type="button" class="btn-secondary" onclick="navigateTo('childInfo')">${t.back}</button>
+            <button type="button" class="btn-secondary" onclick="addAnotherChild()">${t.addMore}</button>
+            <button type="button" class="btn-danger" onclick="logoutToHome()">${t.logout}</button>
+          </div>
+        `;
+      }
+
+      function addAnotherChild() {
+        currentChild = { name: "", age_mons: 0, gender: "", jaundice: "", family_asd: "" };
+        childPhotoBase64 = null;
+        photoScreeningResult = null;
+        predictionResult = null;
+        resetQuestionnaireState();
+        navigateTo("childInfo");
+      }
+
+      function logoutToHome() {
+        currentUser = null;
+        authMode = "register";
+        authDraft = { email: "", password: "" };
+        currentChild = { name: "", age_mons: 0, gender: "", jaundice: "", family_asd: "" };
+        childPhotoBase64 = null;
+        photoScreeningResult = null;
+        predictionResult = null;
+        preSummaryReady = false;
+        resetQuestionnaireState();
+        navigateTo("home");
+      }
+
+      function renderPhotoUpload() {
+        const t = T[currentLang];
+        const preview = childPhotoBase64
+          ? `<img src="${childPhotoBase64}" alt="Child preview" class="photo-preview" />`
+          : "";
+        document.getElementById("view-photoUpload").innerHTML = `
+          ${buildHeader()}
+          <div class="section-label">${t.facialTitle}</div>
+          <p>${t.facialSub}</p>
+          <div class="photo-action-row">
+            <button type="button" class="photo-picker" onclick="document.getElementById('fileUpload').click()">${t.uploadPic}</button>
+            <button type="button" class="photo-picker" onclick="openCameraModal()">${t.takePic}</button>
+          </div>
+          <input id="fileUpload" class="hidden-input" type="file" accept="image/*" onchange="handlePhotoFile(event)" />
+          ${preview}
+          <div class="btn-row">
+            <button type="button" class="btn-secondary" onclick="navigateTo('profileCreated')">${t.back}</button>
+            <button type="button" class="btn-primary" ${childPhotoBase64 ? "" : "disabled"} onclick="runPhotoScreening()">${t.next}</button>
+          </div>
+        `;
+      }
+
+      function handlePhotoFile(event) {
+        const t = T[currentLang];
+        const file = event.target && event.target.files ? event.target.files[0] : null;
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          childPhotoBase64 = reader.result;
+          renderPhotoUpload();
+          showToast(t.photoSelected);
+        };
+        reader.onerror = () => showToast(t.photoReadErr);
+        reader.readAsDataURL(file);
+      }
+
+      // ------------------------- Live camera capture -------------------------
+      let cameraStream = null;
+      let cameraFacing = "user"; // "user" = front, "environment" = back
+      let cameraCapturedDataUrl = null;
+
+      function cameraRefreshStrings() {
+        const t = T[currentLang];
+        document.getElementById("cameraTitle").textContent = t.cameraTitle;
+        document.getElementById("cameraHint").textContent = t.cameraHint;
+      }
+
+      function cameraSetMode(mode) {
+        // mode: "live" | "preview" | "error"
+        const video = document.getElementById("cameraVideo");
+        const preview = document.getElementById("cameraPreview");
+        const err = document.getElementById("cameraErrorBox");
+        const controls = document.getElementById("cameraControls");
+        const t = T[currentLang];
+
+        video.style.display = mode === "live" ? "block" : "none";
+        preview.style.display = mode === "preview" ? "block" : "none";
+        err.style.display = mode === "error" ? "block" : "none";
+
+        if (mode === "live") {
+          controls.className = "camera-controls";
+          controls.innerHTML = `
+            <button type="button" id="cameraSwitchBtn" class="camera-btn camera-btn-secondary" onclick="switchCameraFacing()">${t.cameraSwitch}</button>
+            <button type="button" id="cameraCaptureBtn" class="camera-btn camera-btn-primary" onclick="capturePhoto()">${t.cameraCapture}</button>
+          `;
+        } else if (mode === "preview") {
+          controls.className = "camera-controls";
+          controls.innerHTML = `
+            <button type="button" class="camera-btn camera-btn-secondary" onclick="retakePhoto()">${t.cameraRetake}</button>
+            <button type="button" class="camera-btn camera-btn-primary" onclick="useCapturedPhoto()">${t.cameraUse}</button>
+          `;
+        } else if (mode === "error") {
+          controls.className = "camera-controls full";
+          controls.innerHTML = `
+            <button type="button" class="camera-btn camera-btn-danger" onclick="closeCameraModal()">${t.cameraCancel}</button>
+          `;
+        }
+      }
+
+      async function openCameraModal() {
+        cameraRefreshStrings();
+        cameraCapturedDataUrl = null;
+        document.getElementById("cameraBackdrop").classList.add("open");
+        await startCameraStream();
+      }
+
+      async function startCameraStream() {
+        const t = T[currentLang];
+        const video = document.getElementById("cameraVideo");
+        const errBox = document.getElementById("cameraErrorBox");
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          errBox.textContent = t.cameraUnavailable;
+          cameraSetMode("error");
+          return;
+        }
+
+        stopCameraStream();
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: cameraFacing }, width: { ideal: 1280 }, height: { ideal: 960 } },
+            audio: false,
+          });
+          cameraStream = stream;
+          video.setAttribute("data-facing", cameraFacing);
+          video.srcObject = stream;
+          try { await video.play(); } catch (_e) { /* autoplay suppressed on some mobile browsers until user interacts */ }
+          cameraSetMode("live");
+        } catch (err) {
+          let msg = t.cameraStartError;
+          if (err && (err.name === "NotAllowedError" || err.name === "SecurityError")) msg = t.cameraPermission;
+          else if (err && err.name === "NotFoundError") msg = t.cameraUnavailable;
+          errBox.textContent = msg;
+          cameraSetMode("error");
+        }
+      }
+
+      async function switchCameraFacing() {
+        cameraFacing = cameraFacing === "user" ? "environment" : "user";
+        await startCameraStream();
+      }
+
+      function capturePhoto() {
+        const t = T[currentLang];
+        const video = document.getElementById("cameraVideo");
+        const canvas = document.getElementById("cameraCanvas");
+        const preview = document.getElementById("cameraPreview");
+
+        const w = video.videoWidth;
+        const h = video.videoHeight;
+        if (!w || !h) {
+          showToast(t.cameraCaptureError);
+          return;
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        // Un-mirror the front-facing preview when saving the frame
+        if (cameraFacing === "user") {
+          ctx.translate(w, 0);
+          ctx.scale(-1, 1);
+        }
+        ctx.drawImage(video, 0, 0, w, h);
+        try {
+          cameraCapturedDataUrl = canvas.toDataURL("image/jpeg", 0.92);
+        } catch (e) {
+          showToast(t.cameraCaptureError);
+          return;
+        }
+        preview.src = cameraCapturedDataUrl;
+        preview.style.transform = "none"; // preview already un-mirrored
+        stopCameraStream();
+        cameraSetMode("preview");
+      }
+
+      async function retakePhoto() {
+        cameraCapturedDataUrl = null;
+        await startCameraStream();
+      }
+
+      function useCapturedPhoto() {
+        const t = T[currentLang];
+        if (!cameraCapturedDataUrl) return;
+        childPhotoBase64 = cameraCapturedDataUrl;
+        closeCameraModal();
+        renderPhotoUpload();
+        showToast(t.cameraCaptured);
+      }
+
+      function stopCameraStream() {
+        if (cameraStream) {
+          cameraStream.getTracks().forEach((t) => t.stop());
+          cameraStream = null;
+        }
+        const video = document.getElementById("cameraVideo");
+        if (video) video.srcObject = null;
+      }
+
+      function closeCameraModal() {
+        stopCameraStream();
+        cameraCapturedDataUrl = null;
+        document.getElementById("cameraBackdrop").classList.remove("open");
+      }
+      // ---------------------------------------------------------------------
+
+      async function runPhotoScreening() {
+        const t = T[currentLang];
+        if (!childPhotoBase64) {
+          showToast(t.choosePhoto);
+          return;
+        }
+        try {
+          const response = await fetch(API_BASE_URL + "/api/photo/screen", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: childPhotoBase64 }),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(httpErrorMessage(data, "Photo screening failed"));
+          photoScreeningResult = data.result === "autistic" ? "autistic" : "non-autistic";
+        } catch (error) {
+          photoScreeningResult = "non-autistic";
+          showToast(t.photoFallback + " " + error.message);
+        }
+        navigateTo("photoResult");
+      }
+
+      function renderPhotoResult() {
+        const t = T[currentLang];
+        const isAutistic = photoScreeningResult === "autistic";
+        document.getElementById("view-photoResult").innerHTML = `
+          ${buildHeader()}
+          ${childPhotoBase64 ? `<img src="${childPhotoBase64}" alt="Child photo" class="child-photo-circle" />` : ""}
+          <div class="child-name">${escapeHtml(currentChild.name || "")}</div>
+          <div class="centered" style="margin-bottom:12px;">
+            <span style="font-weight:600;color:var(--heading);">${t.result}</span>
+          </div>
+          <div class="centered" style="margin-bottom:14px;">
+            <span class="badge ${isAutistic ? "badge-warning" : "badge-success"}">${isAutistic ? t.autisticLabel : t.nonAutisticLabel}</span>
+          </div>
+          <p class="status-note">${isAutistic ? t.autisticMsg : t.nonAutisticMsg}</p>
+          <div class="btn-row">
+            <button type="button" class="btn-secondary" onclick="navigateTo('profileCreated')">${t.goToProfile}</button>
+            ${
+              isAutistic
+                ? `<button type="button" class="btn-primary" onclick="beginQuestionnaire()">${t.continueQ}</button>`
+                : `<button type="button" class="btn-danger" onclick="logoutToHome()">${t.logout}</button>`
+            }
+          </div>
+        `;
+      }
+
+      function resetQuestionnaireState() {
+        qchatResponses = new Array(10).fill(null);
+        mchatResponses = new Array(14).fill(null);
+        currentQIndex = 0;
+        activeSection = "qchat";
+        predictionResult = null;
+      }
+
+      function beginQuestionnaire() {
+        resetQuestionnaireState();
+        showView("qchat");
+        renderQuestion();
+      }
+
+      function renderQuestion() {
+        const t = T[currentLang];
+        const isQchat = activeSection === "qchat";
+        const currentQuestion = isQchat ? ALL_QUESTIONS[currentQIndex] : ALL_QUESTIONS[10 + currentQIndex];
+        const display = currentQuestion[currentLang];
+        const total = isQchat ? 10 : 14;
+        const progress = ((currentQIndex + 1) / total) * 100;
+        const responseValue = isQchat ? qchatResponses[currentQIndex] : mchatResponses[currentQIndex];
+        const targetId = isQchat ? "view-qchat" : "view-mchat";
+        const otherId = isQchat ? "view-mchat" : "view-qchat";
+        document.getElementById(otherId).innerHTML = "";
+
+        let optionsMarkup = "";
+        if (isQchat) {
+          optionsMarkup = display.opts
+            .map(
+              (opt, index) => `
+                <button
+                  type="button"
+                  class="option-btn ${responseValue === index ? "selected" : ""}"
+                  onclick="selectQchatOption(${index})"
+                >${escapeHtml(opt)}</button>
+              `
+            )
+            .join("");
+        } else {
+          optionsMarkup = `
+            <div class="yesno-row">
+              <button
+                type="button"
+                class="yn-btn yn-btn-yes ${responseValue === "yes" ? "selected" : ""}"
+                onclick="selectMchatOption('yes')"
+              >${t.yesBtn}</button>
+              <button
+                type="button"
+                class="yn-btn yn-btn-no ${responseValue === "no" ? "selected" : ""}"
+                onclick="selectMchatOption('no')"
+              >${t.noBtn}</button>
+            </div>
+          `;
+        }
+
+        const backDisabled = isQchat && currentQIndex === 0;
+        const nextLabel = isQchat
+          ? t.next
+          : currentQIndex === 13
+            ? t.submit
+            : t.next;
+
+        document.getElementById(targetId).innerHTML = `
+          ${buildHeader()}
+          <div class="badge ${isQchat ? "badge-qchat" : "badge-mchat"}">${isQchat ? t.qchatBadge : t.mchatBadge}</div>
+          <div class="question-counter">${t.questionOf} ${currentQIndex + 1} ${t.of} ${total}</div>
+          <div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
+          <div class="question-text">${escapeHtml(display.text)}</div>
+          ${optionsMarkup}
+          <div class="btn-row">
+            <button type="button" class="btn-secondary" ${backDisabled ? "disabled" : ""} onclick="handleQuestionBack()">${t.back}</button>
+            <button type="button" class="btn-primary" ${responseValue == null ? "disabled" : ""} onclick="handleQuestionNext()">${nextLabel}</button>
+          </div>
+        `;
+      }
+
+      function selectQchatOption(optionIndex) {
+        qchatResponses[currentQIndex] = optionIndex;
+        renderQuestion();
+      }
+
+      function selectMchatOption(value) {
+        mchatResponses[currentQIndex] = value;
+        renderQuestion();
+      }
+
+      function handleQuestionBack() {
+        if (activeSection === "qchat") {
+          if (currentQIndex === 0) return;
+          currentQIndex -= 1;
+          renderQuestion();
+          return;
+        }
+        if (currentQIndex === 0) {
+          activeSection = "qchat";
+          currentQIndex = 9;
+          showView("qchat");
+          renderQuestion();
+          return;
+        }
+        currentQIndex -= 1;
+        renderQuestion();
+      }
+
+      function handleQuestionNext() {
+        const t = T[currentLang];
+        if (activeSection === "qchat") {
+          if (qchatResponses[currentQIndex] == null) {
+            showToast(t.selectAnswer);
+            return;
+          }
+          if (currentQIndex < 9) {
+            currentQIndex += 1;
+            renderQuestion();
+            return;
+          }
+          activeSection = "mchat";
+          currentQIndex = 0;
+          showView("mchat");
+          renderQuestion();
+          return;
+        }
+
+        if (mchatResponses[currentQIndex] == null) {
+          showToast(t.selectAnswer);
+          return;
+        }
+        if (currentQIndex < 13) {
+          currentQIndex += 1;
+          renderQuestion();
+          return;
+        }
+        submitQuestionnaire();
+      }
+
+      function computeBinaryAnswers() {
+        const binary = {};
+        ALL_QUESTIONS.forEach((q, i) => {
+          let raw;
+          if (q.section === "qchat") {
+            raw = qchatResponses[i];
+            binary[q.id] = q.atRisk.includes(raw) ? 1 : 0;
+          } else {
+            raw = mchatResponses[i - 10];
+            binary[q.id] = q.atRisk.includes(raw) ? 1 : 0;
+          }
+        });
+        return binary;
+      }
+
+      function computeQchatLegacy() {
+        const map = {};
+        ALL_QUESTIONS.slice(0, 10).forEach((q, i) => {
+          const idx = qchatResponses[i];
+          map[String(i + 1)] = idx !== null ? q.en.opts[idx] : null;
+        });
+        return map;
+      }
+
+      function renderPreSummary() {
+        const t = T[currentLang];
+        document.getElementById("view-preSummary").innerHTML = `
+          ${buildHeader()}
+          ${childPhotoBase64 ? `<img src="${childPhotoBase64}" alt="Child photo" class="child-photo-circle" />` : ""}
+          <div class="child-name">${escapeHtml(currentChild.name || "")}</div>
+          ${
+            preSummaryReady
+              ? `
+                <p class="centered">${t.responsesRecorded}</p>
+                <div class="btn-row">
+                  <button type="button" class="btn-danger" onclick="logoutToHome()">${t.logout}</button>
+                  <button type="button" class="btn-primary" onclick="navigateTo('results')">${t.viewReport}</button>
+                </div>
+              `
+              : `
+                <div class="spinner"></div>
+                <p class="centered">${t.processing}</p>
+              `
+          }
+        `;
+      }
+
+      async function submitQuestionnaire() {
+        const t = T[currentLang];
+        preSummaryReady = false;
+        showView("preSummary");
+        renderPreSummary();
+        await new Promise((resolve) => setTimeout(resolve, 20));
+
+        try {
+          const legacy = computeQchatLegacy();
+          const mchat_answers = {};
+          ALL_QUESTIONS.slice(10).forEach((q, i) => {
+            const num = q.id.replace("a", "");
+            mchat_answers[num] = mchatResponses[i] === "yes" ? "Yes" : "No";
+          });
+
+          let genderVal = "other";
+          if (currentChild.gender === "male") genderVal = "male";
+          if (currentChild.gender === "female") genderVal = "female";
+
+          const payload = {
+            age_mons: Number(currentChild.age_mons),
+            gender: genderVal,
+            jaundice: currentChild.jaundice,
+            family_mem_with_asd: currentChild.family_asd,
+            qchat_answers: legacy,
+            mchat_answers: mchat_answers,
+          };
+
+          const res = await fetch(API_BASE_URL + "/api/screen/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(httpErrorMessage(data, "HTTP " + res.status));
+          predictionResult = data;
+          preSummaryReady = true;
+          showView("results");
+          renderResults();
+        } catch (err) {
+          predictionResult = null;
+          preSummaryReady = true;
+          showView("results");
+          renderResults();
+          showToast("Error: " + err.message);
+        }
+      }
+
+      function getModelConfidence(result) {
+        const probs = (result && result.class_probabilities) || {};
+        if (typeof probs.Autistic === "number") return probs.Autistic;
+        const predictedLabel =
+          (result && result.prediction_screening && result.prediction_screening.predicted_label) ||
+          (result && result.prediction_default && result.prediction_default.predicted_label) ||
+          "";
+        if (predictedLabel && typeof probs[predictedLabel] === "number") return probs[predictedLabel];
+        const values = Object.values(probs).map((value) => Number(value)).filter((value) => Number.isFinite(value));
+        return values.length ? Math.max.apply(null, values) : 0;
+      }
+
+      function retrySubmit() {
+        submitQuestionnaire();
+      }
+
+      function returnToQuestions() {
+        if (activeSection === "mchat") {
+          showView("mchat");
+          renderQuestion();
+        } else {
+          showView("qchat");
+          renderQuestion();
+        }
+      }
+
+      function renderResults(result) {
+        if (result) predictionResult = result;
+        const t = T[currentLang];
+        const view = document.getElementById("view-results");
+
+        if (!predictionResult) {
+          view.innerHTML = `
+            ${buildHeader()}
+            <h2 class="centered">${t.riskLevel}</h2>
+            <p class="centered">${t.noResultState}</p>
+            <div class="btn-row">
+              <button type="button" class="btn-primary" onclick="retrySubmit()">${t.retry}</button>
+              <button type="button" class="btn-secondary" onclick="returnToQuestions()">${t.returnToQuestions}</button>
+            </div>
+          `;
+          return;
+        }
+
+        const score = Number(predictionResult.screening_score || 0);
+        const riskClass = score <= 3 ? "risk-low" : score <= 7 ? "risk-medium" : "risk-high";
+        const confidence = getModelConfidence(predictionResult);
+        const confidencePct = (confidence * 100).toFixed(1) + "%";
+
+        view.innerHTML = `
+          ${buildHeader()}
+          ${childPhotoBase64 ? `<img src="${childPhotoBase64}" alt="Child photo" class="child-photo-circle small" />` : ""}
+          <div class="child-name">${escapeHtml(currentChild.name || "")}</div>
+
+          <div class="result-card ${riskClass}">
+            <div class="result-label">${t.screeningScore}</div>
+            <div class="result-value">${escapeHtml(score)} / 24</div>
+          </div>
+
+          <div class="result-card ${riskClass}">
+            <div class="result-label">${t.riskLevel}</div>
+            <div class="result-value">${escapeHtml(predictionResult.score_risk_level || "-")}</div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-label">${t.modelConfidence}</div>
+            <div class="result-value">${escapeHtml(confidencePct)}</div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-label">${t.recommendation}</div>
+            <div class="result-value small">${escapeHtml(predictionResult.referral_interpretation || "-")}</div>
+          </div>
+
+          <div class="disclaimer-box">${t.disclaimer}</div>
+
+          <div class="btn-row">
+            <button type="button" class="btn-danger" onclick="logoutToHome()">${t.logout}</button>
+            <button type="button" class="btn-primary" id="downloadPdfBtn" onclick="downloadPDF()">${t.downloadReport}</button>
+          </div>
+        `;
+      }
+
+      async function downloadPDF() {
+        const t = T[currentLang];
+        if (!predictionResult) {
+          showToast(t.noResultState);
+          return;
+        }
+        const btn = document.getElementById("downloadPdfBtn");
+        if (!btn) return;
+        btn.disabled = true;
+        btn.textContent = t.generating;
+        try {
+          const reportRes = await fetch(API_BASE_URL + "/api/report/llm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              inference_result: predictionResult,
+              language: currentLang,
+            }),
+          });
+          const reportData = await reportRes.json().catch(() => ({}));
+          if (!reportRes.ok) throw new Error(httpErrorMessage(reportData, "Report generation failed"));
+
+          const res = await fetch(API_BASE_URL + "/api/report/pdf", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              inference_result: predictionResult,
+              report_text: reportData.report_text || predictionResult.referral_interpretation || "Assessment Report",
+              language: currentLang,
+            }),
+          });
+          if (!res.ok) throw new Error("PDF generation failed");
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "aid-report-" + Date.now() + ".pdf";
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } catch (err) {
+          showToast("PDF Error: " + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = t.downloadReport;
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        showView("home");
+        setLanguage("en");
+        renderHome();
+      });
+    </script>
+  </body>
+</html>

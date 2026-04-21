@@ -1,0 +1,96 @@
+{
+  "criterion": "ROC-AUC on validation split (Autistic = positive class)",
+  "candidates": [
+    {
+      "model": "EfficientNet-B0",
+      "ckpt": "C:\\Users\\Hassaan\\Desktop\\aid_updated_v1\\aid_updated_v1\\models\\cnn\\efficientnet_b0.pth",
+      "valid_samples": 80,
+      "loss": 0.3674,
+      "accuracy": 0.9375,
+      "roc_auc": 0.97,
+      "per_class": {
+        "Autistic": {
+          "precision": 0.973,
+          "recall": 0.9,
+          "f1": 0.9351
+        },
+        "Non_Autistic": {
+          "precision": 0.907,
+          "recall": 0.975,
+          "f1": 0.9398
+        }
+      },
+      "confusion_matrix": [
+        [
+          36,
+          4
+        ],
+        [
+          1,
+          39
+        ]
+      ]
+    },
+    {
+      "model": "ResNet-50",
+      "ckpt": "C:\\Users\\Hassaan\\Desktop\\aid_updated_v1\\aid_updated_v1\\models\\cnn\\resnet50.pth",
+      "valid_samples": 80,
+      "loss": 0.3475,
+      "accuracy": 0.95,
+      "roc_auc": 0.98,
+      "per_class": {
+        "Autistic": {
+          "precision": 0.9737,
+          "recall": 0.925,
+          "f1": 0.9487
+        },
+        "Non_Autistic": {
+          "precision": 0.9286,
+          "recall": 0.975,
+          "f1": 0.9512
+        }
+      },
+      "confusion_matrix": [
+        [
+          37,
+          3
+        ],
+        [
+          1,
+          39
+        ]
+      ]
+    },
+    {
+      "model": "MobileNetV3-Large",
+      "ckpt": "C:\\Users\\Hassaan\\Desktop\\aid_updated_v1\\aid_updated_v1\\models\\cnn\\mobilenet_v3_large.pth",
+      "valid_samples": 80,
+      "loss": 0.2659,
+      "accuracy": 0.925,
+      "roc_auc": 0.9719,
+      "per_class": {
+        "Autistic": {
+          "precision": 0.9474,
+          "recall": 0.9,
+          "f1": 0.9231
+        },
+        "Non_Autistic": {
+          "precision": 0.9048,
+          "recall": 0.95,
+          "f1": 0.9268
+        }
+      },
+      "confusion_matrix": [
+        [
+          36,
+          4
+        ],
+        [
+          2,
+          38
+        ]
+      ]
+    }
+  ],
+  "best": "ResNet-50"
+}

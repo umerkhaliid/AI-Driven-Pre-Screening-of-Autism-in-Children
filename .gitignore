@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Model files
+models/*.joblib
+
+# Reports (PDF outputs)
+reports/*.pdf
+
+# OS files
+.DS_Store
+Thumbs.db

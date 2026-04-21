@@ -1,0 +1,64 @@
+{
+  "split": "test",
+  "num_samples": 280,
+  "classes": [
+    "Autistic",
+    "Non_Autistic"
+  ],
+  "elapsed_seconds": 6.33,
+  "loss": 0.508523,
+  "accuracy": 0.789286,
+  "per_class": {
+    "Autistic": {
+      "precision": 0.858407,
+      "recall": 0.692857,
+      "f1": 0.766798,
+      "support": 140
+    },
+    "Non_Autistic": {
+      "precision": 0.742515,
+      "recall": 0.885714,
+      "f1": 0.807818,
+      "support": 140
+    }
+  },
+  "macro_avg": {
+    "precision": 0.800461,
+    "recall": 0.789286,
+    "f1": 0.787308
+  },
+  "weighted_avg": {
+    "precision": 0.800461,
+    "recall": 0.789286,
+    "f1": 0.787308
+  },
+  "confusion_matrix": {
+    "labels": [
+      "Autistic",
+      "Non_Autistic"
+    ],
+    "matrix": [
+      [
+        97,
+        43
+      ],
+      [
+        16,
+        124
+      ]
+    ],
+    "TP_autistic": 97,
+    "FN_autistic": 43,
+    "FP_autistic": 16,
+    "TN_autistic": 124
+  },
+  "clinical_metrics_positive_class_autistic": {
+    "sensitivity_recall": 0.692857,
+    "specificity": 0.885714,
+    "precision_ppv": 0.858407,
+    "npv": 0.742515,
+    "fpr": 0.114286,
+    "fnr": 0.307143,
+    "roc_auc": 0.882908
+  }
+}
