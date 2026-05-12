@@ -53,6 +53,8 @@ class ScreenPayload(BaseModel):
     family_mem_with_asd: str
     qchat_answers: Dict[str, str]
     mchat_answers: Dict[str, str]
+    # Optional free-text parent description for NLP symptom extraction
+    free_text: Optional[str] = None
 
     class Config:
         json_schema_extra = {
@@ -63,6 +65,7 @@ class ScreenPayload(BaseModel):
                 "family_mem_with_asd": "no",
                 "qchat_answers": {1: "A", 2: "B"},
                 "mchat_answers": {11: "Yes", 12: "No"},
+                "free_text": "He doesn't make eye contact and repeats words a lot.",
             }
         }
 
@@ -133,6 +136,8 @@ def api_screen_predict(body: ScreenPayload):
             "family_mem_with_asd": body.family_mem_with_asd,
             "qchat_answers": {int(k): v for k, v in body.qchat_answers.items()},
             "mchat_answers": {int(k): v for k, v in body.mchat_answers.items()},
+            # Optional: NLP free-text input from parent
+            "free_text": body.free_text or "",
         }
         result = predict_autism_risk(payload)
         return JSONResponse(result)

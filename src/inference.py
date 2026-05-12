@@ -1,11 +1,12 @@
 import joblib
 import numpy as np
 import pandas as pd
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from src.config import MODELS_DIR, RISK_LABELS, NUM_CLASSES
 from src.qchat_mapper import map_all_answers_to_features, compute_total_score
 from src.scoring import screening_risk_level, screening_referral_interpretation
+from src.nlp_extractor import extract_symptom_flags, get_nlp_feature_names, nlp_flags_to_clinical_summary
 
 
 CALIBRATED_MODEL_PATH = MODELS_DIR / "calibrated_model.joblib"
@@ -108,7 +109,11 @@ def normalize_gender(value: str) -> int:
     raise ValueError("Invalid gender value")
 
 
-def build_feature_row(mapped_features: Dict[str, int], payload: Dict[str, Any]) -> pd.DataFrame:
+def build_feature_row(
+    mapped_features: Dict[str, int],
+    payload: Dict[str, Any],
+    nlp_flags: Optional[Dict[str, int]] = None
+) -> pd.DataFrame:
     row = {}
     for i in range(1, 25):
         row[f"a{i}"] = mapped_features[f"a{i}"]
@@ -117,6 +122,9 @@ def build_feature_row(mapped_features: Dict[str, int], payload: Dict[str, Any]) 
     row["sex"] = normalize_gender(get_gender_value(payload))
     row["jaundice"] = normalize_yes_no(payload["jaundice"])
     row["family_mem_with_asd"] = normalize_yes_no(payload["family_mem_with_asd"])
+    # Append NLP flags — default all to 0 if not provided (graceful degradation)
+    for col in get_nlp_feature_names():
+        row[col] = int(nlp_flags.get(col, 0)) if nlp_flags else 0
     return pd.DataFrame([row])
 
 
@@ -128,6 +136,7 @@ def predict_autism_risk(payload: Dict[str, Any]) -> Dict[str, Any]:
     - Default prediction (argmax of probabilities)
     - Screening prediction (per-class tuned thresholds, conservative for recall)
     - All class probabilities
+    - NLP-extracted symptom flags (if free_text was provided)
     """
     validate_payload(payload)
 
@@ -140,12 +149,17 @@ def predict_autism_risk(payload: Dict[str, Any]) -> Dict[str, Any]:
     score_risk_level = screening_risk_level(total_score)
     referral = screening_referral_interpretation(total_score)
 
+    # ── NLP feature extraction ───────────────────────────────────────────────
+    free_text = str(payload.get("free_text") or "").strip()
+    nlp_flags = extract_symptom_flags(free_text) if free_text else None
+    nlp_summary = nlp_flags_to_clinical_summary(nlp_flags) if nlp_flags else None
+
     # ML inference
     model = load_calibrated_model()
     threshold_cfg = load_threshold_config()
     per_class_thresholds = threshold_cfg["per_class_thresholds"]
 
-    X = build_feature_row(mapped, payload)
+    X = build_feature_row(mapped, payload, nlp_flags)
     class_probs = model.predict_proba(X)[0]
 
     # Default prediction (argmax)
@@ -159,14 +173,15 @@ def predict_autism_risk(payload: Dict[str, Any]) -> Dict[str, Any]:
     for cls_id, label in RISK_LABELS.items():
         class_probabilities[label] = round(float(class_probs[cls_id]), 4)
 
-    return {
+    result = {
         "inputs_used": {
             "age_mons": int(payload["age_mons"]),
             "gender": get_gender_value(payload),
             "jaundice": str(payload["jaundice"]).strip().lower(),
             "family_mem_with_asd": str(payload["family_mem_with_asd"]).strip().lower(),
             "qchat_answers": payload["qchat_answers"],
-            "mchat_answers": payload["mchat_answers"]
+            "mchat_answers": payload["mchat_answers"],
+            "free_text": free_text or None,
         },
         "screening_score": total_score,
         "screening_score_max": 24,
@@ -191,3 +206,12 @@ def predict_autism_risk(payload: Dict[str, Any]) -> Dict[str, Any]:
             "consult a qualified healthcare professional."
         )
     }
+
+    # Attach NLP results if free text was processed
+    if nlp_flags is not None:
+        active_flags = {k: v for k, v in nlp_flags.items() if v == 1}
+        result["nlp_symptom_flags"] = nlp_flags
+        result["nlp_flags_detected"] = active_flags
+        result["nlp_clinical_summary"] = nlp_summary
+
+    return result

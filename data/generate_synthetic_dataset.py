@@ -14,30 +14,30 @@ import pandas as pd
 SEED = 42
 np.random.seed(SEED)
 
-# ── Total samples & class distribution ──────────────────────────────────────
+# -- Total samples & class distribution ---------------------------------------
 N = 5000
 CLASS_DIST = {
-    0: 0.35,   # No Risk       — 1750
-    1: 0.30,   # Mild Risk     — 1500
-    2: 0.20,   # Moderate Risk — 1000
-    3: 0.15,   # Severe Risk   —  750
+    0: 0.35,   # No Risk       -- 1750
+    1: 0.30,   # Mild Risk     -- 1500
+    2: 0.20,   # Moderate Risk -- 1000
+    3: 0.15,   # Severe Risk   --  750
 }
 CLASS_LABELS = {0: "No Risk", 1: "Mild Risk", 2: "Moderate Risk", 3: "Severe Risk"}
 
-# ── 24 Unique Questions ─────────────────────────────────────────────────────
+# -- 24 Unique Questions -------------------------------------------------------
 # Source: Q-CHAT-10 (a1-a10) + 14 unique M-CHAT-R items (a11-a24)
 # Binary encoding: 1 = at-risk response, 0 = typical response
 #
 # Duplicates removed (Q-CHAT kept, M-CHAT dropped):
-#   Q-CHAT Q1 ≈ M-CHAT Q10 (name response)
-#   Q-CHAT Q2 ≈ M-CHAT Q14 (eye contact)
-#   Q-CHAT Q3 ≈ M-CHAT Q6  (pointing to request)
-#   Q-CHAT Q4 ≈ M-CHAT Q7  (pointing to share)
-#   Q-CHAT Q5 ≈ M-CHAT Q3  (pretend play)
-#   Q-CHAT Q6 ≈ M-CHAT Q16 (gaze following)
+#   Q-CHAT Q1 ~ M-CHAT Q10 (name response)
+#   Q-CHAT Q2 ~ M-CHAT Q14 (eye contact)
+#   Q-CHAT Q3 ~ M-CHAT Q6  (pointing to request)
+#   Q-CHAT Q4 ~ M-CHAT Q7  (pointing to share)
+#   Q-CHAT Q5 ~ M-CHAT Q3  (pretend play)
+#   Q-CHAT Q6 ~ M-CHAT Q16 (gaze following)
 
 QUESTIONS = {
-    # ── Q-CHAT-10 (a1–a10) ──────────────────────────────────────────────────
+    # -- Q-CHAT-10 (a1-a10) ---------------------------------------------------
     "a1":  "Does your child look at you when you call his/her name?",
     "a2":  "How easy is it for you to get eye contact with your child?",
     "a3":  "Does your child point to indicate that s/he wants something?",
@@ -47,9 +47,9 @@ QUESTIONS = {
     "a7":  "Does your child comfort upset family members?",
     "a8":  "Would you describe your child's first words as typical?",
     "a9":  "Does your child use simple gestures? (e.g. wave goodbye)",
-    "a10": "Does your child stare at nothing with no apparent purpose?",         # REVERSE
+    "a10": "Does your child stare at nothing with no apparent purpose?",  # REVERSE
 
-    # ── M-CHAT-R unique items (a11–a24) ──────────────────────────────────────
+    # -- M-CHAT-R unique items (a11-a24) --------------------------------------
     "a11": "If you point at something across the room, does your child look at it?",
     "a12": "Have you ever wondered if your child might be deaf?",                # REVERSE
     "a13": "Does your child like climbing on things?",
@@ -68,47 +68,78 @@ QUESTIONS = {
 
 QUESTION_COLS = [f"a{i}" for i in range(1, 25)]
 
-# ── Per-question at-risk probability by class ───────────────────────────────
+# -- NLP flag columns — 10 synthetic flags augmenting the feature vector ------
+# Each flag represents a free-text symptom signal extracted by the NLP pipeline.
+# Probabilities: [P(flag=1|NoRisk), P(flag=1|Mild), P(flag=1|Moderate), P(flag=1|Severe)]
+#
+# Logic: Higher severity -> parent more likely to describe these in free text.
+
+NLP_FEATURE_NAMES = [
+    "nlp_eye_contact_absent",
+    "nlp_name_response_absent",
+    "nlp_pointing_absent",
+    "nlp_echolalia_present",
+    "nlp_repetitive_behaviour",
+    "nlp_sensory_sensitivity",
+    "nlp_social_interest_absent",
+    "nlp_language_delay",
+    "nlp_gesture_absent",
+    "nlp_pretend_play_absent",
+]
+
+NLP_ITEM_PROBS = {
+    #                                    NoRisk  Mild   Moderate  Severe
+    "nlp_eye_contact_absent":           [0.03,  0.20,  0.55,     0.85],
+    "nlp_name_response_absent":         [0.02,  0.18,  0.50,     0.82],
+    "nlp_pointing_absent":              [0.03,  0.15,  0.48,     0.80],
+    "nlp_echolalia_present":            [0.02,  0.12,  0.38,     0.70],
+    "nlp_repetitive_behaviour":         [0.03,  0.14,  0.42,     0.75],
+    "nlp_sensory_sensitivity":          [0.04,  0.16,  0.40,     0.68],
+    "nlp_social_interest_absent":       [0.03,  0.17,  0.50,     0.80],
+    "nlp_language_delay":               [0.02,  0.22,  0.52,     0.84],
+    "nlp_gesture_absent":               [0.03,  0.16,  0.46,     0.78],
+    "nlp_pretend_play_absent":          [0.03,  0.15,  0.44,     0.76],
+}
+
+NLP_COLS = NLP_FEATURE_NAMES  # alias for clarity
+
+# -- Per-question at-risk probability by class --------------------------------
 # Each question has [P(1|NoRisk), P(1|Mild), P(1|Moderate), P(1|Severe)]
-# Clinically important items (joint attention, eye contact, name response,
-# social reciprocity) have higher discriminative power.
 
 ITEM_PROBS = {
     #                          NoRisk  Mild   Moderate  Severe
-    # --- Q-CHAT-10 items (high-importance social/communication) ---
-    "a1":  [0.04, 0.22, 0.55, 0.85],   # Name response (core social)
-    "a2":  [0.05, 0.25, 0.58, 0.88],   # Eye contact (core social)
-    "a3":  [0.06, 0.20, 0.50, 0.82],   # Pointing to request (joint attention)
-    "a4":  [0.05, 0.25, 0.55, 0.86],   # Pointing to share (joint attention)
-    "a5":  [0.06, 0.22, 0.52, 0.80],   # Pretend play (imagination)
-    "a6":  [0.05, 0.23, 0.53, 0.84],   # Gaze following (joint attention)
-    "a7":  [0.07, 0.20, 0.48, 0.78],   # Comfort others (empathy/social)
-    "a8":  [0.05, 0.18, 0.45, 0.76],   # First words (language)
-    "a9":  [0.04, 0.19, 0.50, 0.82],   # Simple gestures (communication)
-    "a10": [0.06, 0.20, 0.48, 0.80],   # Stare at nothing (REVERSE - repetitive)
+    # --- Q-CHAT-10 items ---
+    "a1":  [0.04, 0.22, 0.55, 0.85],   # Name response
+    "a2":  [0.05, 0.25, 0.58, 0.88],   # Eye contact
+    "a3":  [0.06, 0.20, 0.50, 0.82],   # Pointing to request
+    "a4":  [0.05, 0.25, 0.55, 0.86],   # Pointing to share
+    "a5":  [0.06, 0.22, 0.52, 0.80],   # Pretend play
+    "a6":  [0.05, 0.23, 0.53, 0.84],   # Gaze following
+    "a7":  [0.07, 0.20, 0.48, 0.78],   # Comfort others
+    "a8":  [0.05, 0.18, 0.45, 0.76],   # First words
+    "a9":  [0.04, 0.19, 0.50, 0.82],   # Simple gestures
+    "a10": [0.06, 0.20, 0.48, 0.80],   # Stare at nothing (REVERSE)
 
     # --- M-CHAT-R unique items ---
-    "a11": [0.04, 0.18, 0.48, 0.82],   # Follow pointing (joint attention)
-    "a12": [0.03, 0.15, 0.40, 0.70],   # Wonder if deaf (REVERSE - hearing/response)
-    "a13": [0.08, 0.14, 0.28, 0.45],   # Climbing (motor - less discriminative)
-    "a14": [0.03, 0.16, 0.42, 0.72],   # Unusual finger movements (REVERSE - repetitive)
-    "a15": [0.05, 0.22, 0.52, 0.83],   # Interest in children (social)
-    "a16": [0.05, 0.20, 0.50, 0.82],   # Show things (joint attention)
-    "a17": [0.03, 0.15, 0.45, 0.80],   # Smile back (social reciprocity)
-    "a18": [0.07, 0.18, 0.40, 0.65],   # Upset by noises (REVERSE - sensory)
-    "a19": [0.08, 0.12, 0.22, 0.38],   # Walking (motor milestone - weak predictor)
-    "a20": [0.05, 0.20, 0.50, 0.80],   # Copy/imitate (social learning)
-    "a21": [0.05, 0.22, 0.52, 0.82],   # Get you to watch (attention seeking)
-    "a22": [0.04, 0.18, 0.48, 0.78],   # Understand instructions (receptive language)
-    "a23": [0.05, 0.20, 0.50, 0.80],   # Social referencing (social cognition)
-    "a24": [0.08, 0.14, 0.25, 0.42],   # Movement activities (motor/sensory - weak)
+    "a11": [0.04, 0.18, 0.48, 0.82],   # Follow pointing
+    "a12": [0.03, 0.15, 0.40, 0.70],   # Wonder if deaf (REVERSE)
+    "a13": [0.08, 0.14, 0.28, 0.45],   # Climbing (motor)
+    "a14": [0.03, 0.16, 0.42, 0.72],   # Unusual finger movements (REVERSE)
+    "a15": [0.05, 0.22, 0.52, 0.83],   # Interest in children
+    "a16": [0.05, 0.20, 0.50, 0.82],   # Show things
+    "a17": [0.03, 0.15, 0.45, 0.80],   # Smile back
+    "a18": [0.07, 0.18, 0.40, 0.65],   # Upset by noises (REVERSE)
+    "a19": [0.08, 0.12, 0.22, 0.38],   # Walking (motor)
+    "a20": [0.05, 0.20, 0.50, 0.80],   # Copy/imitate
+    "a21": [0.05, 0.22, 0.52, 0.82],   # Get you to watch
+    "a22": [0.04, 0.18, 0.48, 0.78],   # Understand instructions
+    "a23": [0.05, 0.20, 0.50, 0.80],   # Social referencing
+    "a24": [0.08, 0.14, 0.25, 0.42],   # Movement activities (motor)
 }
 
-# ── Demographic distributions by class ──────────────────────────────────────
-# Based on real-world ASD epidemiology patterns
-
+# -- Demographic distributions by class ---------------------------------------
 DEMO_CONFIG = {
-    # age_mons: (mean, std) per class — younger children harder to assess
+    # age_mons: (mean, std) per class
     "age_mons": {
         0: (32, 10),
         1: (28, 10),
@@ -136,7 +167,7 @@ DEMO_CONFIG = {
         2: 0.22,
         3: 0.35,
     },
-    # ethnicity distribution (same across classes for fairness)
+    # ethnicity (same across classes for fairness)
     "ethnicity": [
         "White European", "Middle Eastern", "South Asian", "Asian",
         "Black", "Hispanic", "Native Indian", "Others", "Mixed",
@@ -146,10 +177,10 @@ DEMO_CONFIG = {
 
 
 def generate_dataset(n=N, seed=SEED):
-    """Generate the full synthetic dataset."""
+    """Generate the full synthetic dataset with 37 features (24 Q + 3 demo + 10 NLP)."""
     rng = np.random.default_rng(seed)
 
-    # ── Step 1: Assign classes ──────────────────────────────────────────────
+    # -- Step 1: Assign classes -----------------------------------------------
     class_sizes = {c: int(n * p) for c, p in CLASS_DIST.items()}
     # Adjust rounding to hit exact N
     diff = n - sum(class_sizes.values())
@@ -158,33 +189,23 @@ def generate_dataset(n=N, seed=SEED):
     classes = np.concatenate([np.full(sz, c) for c, sz in class_sizes.items()])
     rng.shuffle(classes)
 
-    # ── Step 2: Generate question responses ─────────────────────────────────
+    # -- Step 2: Generate question responses ----------------------------------
     data = {"risk_class": classes}
 
     for q in QUESTION_COLS:
         probs = np.array(ITEM_PROBS[q])
-        # Get per-sample probability based on class
         sample_probs = probs[classes]
-        # Add per-sample noise (±0.05) for realism
         noise = rng.normal(0, 0.03, size=n)
         sample_probs = np.clip(sample_probs + noise, 0.01, 0.99)
         data[q] = rng.binomial(1, sample_probs)
 
-    # ── Step 3: Inject inter-question correlations ──────────────────────────
-    # Clinically, certain questions are highly correlated within individuals.
-    # If a child fails joint attention items, they likely fail related ones.
-
+    # -- Step 3: Inject inter-question correlations ---------------------------
     correlation_groups = [
-        # Joint attention cluster
-        ["a1", "a2", "a4", "a6", "a11", "a17"],
-        # Communication cluster
-        ["a3", "a8", "a9", "a22"],
-        # Social interest cluster
-        ["a7", "a15", "a16", "a21", "a23"],
-        # Repetitive/sensory cluster
-        ["a10", "a12", "a14", "a18"],
-        # Motor cluster
-        ["a13", "a19", "a24"],
+        ["a1", "a2", "a4", "a6", "a11", "a17"],   # Joint attention
+        ["a3", "a8", "a9", "a22"],                  # Communication
+        ["a7", "a15", "a16", "a21", "a23"],         # Social interest
+        ["a10", "a12", "a14", "a18"],               # Repetitive/sensory
+        ["a13", "a19", "a24"],                      # Motor
     ]
 
     for group in correlation_groups:
@@ -192,12 +213,11 @@ def generate_dataset(n=N, seed=SEED):
         group_mean = group_vals.mean(axis=1)
 
         for q in group:
-            # With 30% probability, align item to group majority
             flip_mask = rng.random(n) < 0.30
             group_majority = (group_mean > 0.5).astype(int)
             data[q] = np.where(flip_mask, group_majority, data[q])
 
-    # ── Step 4: Generate demographics ───────────────────────────────────────
+    # -- Step 4: Generate demographics ----------------------------------------
     # Age (clipped to 12-60 months)
     age = np.zeros(n, dtype=int)
     for c in range(4):
@@ -226,18 +246,24 @@ def generate_dataset(n=N, seed=SEED):
     )
     data["ethnicity"] = ethnicity
 
-    # ── Step 5: Compute derived scores ──────────────────────────────────────
+    # -- Step 5: Generate synthetic NLP flag columns --------------------------
+    for nlp_col in NLP_COLS:
+        probs_by_class = np.array(NLP_ITEM_PROBS[nlp_col])
+        sample_probs = probs_by_class[classes]
+        noise = rng.normal(0, 0.02, size=n)
+        sample_probs = np.clip(sample_probs + noise, 0.01, 0.99)
+        data[nlp_col] = rng.binomial(1, sample_probs)
+
+    # -- Step 6: Compute derived scores ---------------------------------------
     df = pd.DataFrame(data)
     df["screening_score"] = df[QUESTION_COLS].sum(axis=1)
 
-    # ── Step 6: Add controlled label noise (5%) for realism ─────────────────
-    # Real screening data is never perfectly separable
+    # -- Step 7: Add controlled label noise (5%) for realism ------------------
     noise_mask = rng.random(n) < 0.05
     noisy_classes = df["risk_class"].values.copy()
 
     for i in np.where(noise_mask)[0]:
         current = noisy_classes[i]
-        # Shift by ±1 class (realistic misclassification)
         if current == 0:
             noisy_classes[i] = 1
         elif current == 3:
@@ -247,24 +273,26 @@ def generate_dataset(n=N, seed=SEED):
 
     df["risk_class"] = noisy_classes
 
-    # ── Step 7: Reorder columns ─────────────────────────────────────────────
+    # -- Step 8: Reorder columns ----------------------------------------------
     col_order = (
         QUESTION_COLS
-        + ["age_mons", "gender", "ethnicity", "jaundice", "family_mem_with_asd",
-           "screening_score", "risk_class"]
+        + ["age_mons", "gender", "ethnicity", "jaundice", "family_mem_with_asd"]
+        + NLP_COLS
+        + ["screening_score", "risk_class"]
     )
+    # Safety guard: only keep columns that actually exist
+    col_order = [c for c in col_order if c in df.columns]
     df = df[col_order]
 
     return df
 
 
-def validate_dataset(df):
-    """Print validation statistics."""
-    print("=" * 70)
+def validate_dataset(df: pd.DataFrame):
+    """Print a comprehensive validation report for the generated dataset."""
     print("SYNTHETIC DATASET VALIDATION REPORT")
     print("=" * 70)
 
-    print(f"\nShape: {df.shape[0]} rows × {df.shape[1]} columns")
+    print(f"\nShape: {df.shape[0]} rows x {df.shape[1]} columns")
     print(f"Columns: {list(df.columns)}")
 
     # Class distribution
@@ -302,11 +330,22 @@ def validate_dataset(df):
             rates.append(f"{rate:.2f}")
         print(f"  {q:>4s}  {'  '.join(f'{r:>8s}' for r in rates)}")
 
+    # NLP flag rates by class
+    print("\n--- NLP Flag Rate by Class ---")
+    print(f"  {'Flag':>35s}  {'NoRisk':>8s}  {'Mild':>8s}  {'Moderate':>8s}  {'Severe':>8s}")
+    for flag in NLP_COLS:
+        if flag in df.columns:
+            rates = []
+            for cls in range(4):
+                rate = df[df["risk_class"] == cls][flag].mean()
+                rates.append(f"{rate:.2f}")
+            print(f"  {flag:>35s}  {'  '.join(f'{r:>8s}' for r in rates)}")
+
     # Missing values
     print(f"\n--- Missing Values: {df.isnull().sum().sum()} ---")
 
     # Data types
-    print(f"\n--- Data Types ---")
+    print("\n--- Data Types ---")
     for col in df.columns:
         print(f"  {col:>25s}: {df[col].dtype}")
 

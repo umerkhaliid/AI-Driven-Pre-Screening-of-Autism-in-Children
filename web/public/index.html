@@ -859,6 +859,7 @@
         <div id="view-photoResult" class="view"></div>
         <div id="view-qchat" class="view"></div>
         <div id="view-mchat" class="view"></div>
+        <div id="view-freetext" class="view"></div>
         <div id="view-preSummary" class="view"></div>
         <div id="view-results" class="view"></div>
       </div>
@@ -923,7 +924,10 @@
       let currentQIndex = 0;
       let activeSection = "qchat";
       let predictionResult = null;
-      const API_BASE_URL = "http://localhost:8000";
+      const API_BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+        ? "http://localhost:8000"
+        : "https://ai-driven-pre-screening-of-autism-in.onrender.com";
+      let parentFreeText = "";
       let authDraft = { email: "", password: "" };
       let preSummaryReady = false;
 
@@ -997,6 +1001,12 @@
           yesBtn: "✅ Yes",
           noBtn: "❌ No",
           processing: "Processing your responses...",
+          freeTextTitle: "Optional: Describe Your Child's Behaviour",
+          freeTextHint: "In your own words, describe any behaviours or concerns you have noticed. This helps the AI extract additional symptom signals. You may skip this step.",
+          freeTextPlaceholder: "e.g. He doesn't make eye contact, repeats words a lot, and never points at things...",
+          freeTextSkip: "Skip →",
+          freeTextSubmit: "Submit →",
+          nlpSummaryLabel: "Behaviour Analysis (from your description)",
           emailErr: "Please enter a valid email address.",
           passwordErr: "Password must be at least 6 characters.",
           selectAnswer: "Please select an answer.",
@@ -1092,6 +1102,12 @@
           yesBtn: "✅ ہاں",
           noBtn: "❌ نہیں",
           processing: "جوابات پر کارروائی ہو رہی ہے...",
+          freeTextTitle: "اختیاری: اپنے بچے کے رویے کو بیان کریں",
+          freeTextHint: "اپنے الفاظ میں کوئی بھی رویہ یا تشویش بیان کریں۔ آپ یہ مرحلہ چھوڑ سکتے ہیں۔",
+          freeTextPlaceholder: "مثلاً: وہ آنکھ نہیں ملاتا، الفاظ دہراتا ہے، کبھی اشارہ نہیں کرتا...",
+          freeTextSkip: "چھوڑیں ←",
+          freeTextSubmit: "جمع کریں ←",
+          nlpSummaryLabel: "رویے کا تجزیہ (آپ کی تفصیل سے)",
           emailErr: "براہ کرم درست ای میل پتہ درج کریں۔",
           passwordErr: "پاس ورڈ کم از کم 6 حروف پر مشتمل ہونا چاہیے۔",
           selectAnswer: "براہ کرم ایک جواب منتخب کریں۔",
@@ -2177,7 +2193,10 @@
           renderQuestion();
           return;
         }
-        submitQuestionnaire();
+        // After last M-CHAT question: go to free-text screen before submitting
+        showView("freetext");
+        renderFreeText();
+        return;
       }
 
       function computeBinaryAnswers() {
@@ -2193,6 +2212,39 @@
           }
         });
         return binary;
+      }
+
+      function renderFreeText() {
+        const t = T[currentLang];
+        document.getElementById("view-freetext").innerHTML = `
+          ${buildHeader()}
+          <h2 style="color:var(--heading);margin-bottom:8px;font-size:18px">${t.freeTextTitle}</h2>
+          <p class="secondary-copy" style="margin-bottom:14px">${t.freeTextHint}</p>
+          <textarea
+            id="freeTextInput"
+            rows="5"
+            style="width:100%;border-radius:12px;border:1.5px solid var(--border);padding:12px 14px;font-size:14px;font-family:inherit;resize:vertical;color:var(--heading);background:var(--primary-light);box-sizing:border-box;"
+            placeholder="${t.freeTextPlaceholder}"
+          >${escapeHtml(parentFreeText)}</textarea>
+          <div class="btn-row" style="margin-top:14px">
+            <button type="button" class="btn-secondary" onclick="skipFreeText()">${t.freeTextSkip}</button>
+            <button type="button" class="btn-primary" onclick="submitWithFreeText()">${t.freeTextSubmit}</button>
+          </div>
+        `;
+        // Restore any previously typed text
+        const ta = document.getElementById("freeTextInput");
+        if (ta) { ta.value = parentFreeText; }
+      }
+
+      function skipFreeText() {
+        parentFreeText = "";
+        submitQuestionnaire();
+      }
+
+      function submitWithFreeText() {
+        const ta = document.getElementById("freeTextInput");
+        parentFreeText = ta ? ta.value.trim() : "";
+        submitQuestionnaire();
       }
 
       function computeQchatLegacy() {
@@ -2253,6 +2305,7 @@
             family_mem_with_asd: currentChild.family_asd,
             qchat_answers: legacy,
             mchat_answers: mchat_answers,
+            free_text: parentFreeText || "",
           };
 
           const res = await fetch(API_BASE_URL + "/api/screen/predict", {
@@ -2348,6 +2401,12 @@
             <div class="result-label">${t.recommendation}</div>
             <div class="result-value small">${escapeHtml(predictionResult.referral_interpretation || "-")}</div>
           </div>
+
+          ${predictionResult.nlp_clinical_summary && predictionResult.nlp_clinical_summary !== "No specific symptom signals detected in the free-text description." ? `
+          <div class="result-card" style="border-left:4px solid #7b5ea7">
+            <div class="result-label">${t.nlpSummaryLabel || "Behaviour Analysis"}</div>
+            <div class="result-value small">${escapeHtml(predictionResult.nlp_clinical_summary)}</div>
+          </div>` : ""}
 
           <div class="disclaimer-box">${t.disclaimer}</div>
 

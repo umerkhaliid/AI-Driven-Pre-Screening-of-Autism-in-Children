@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from src.config import RAW_DATASET_PATH, PROCESSED_TRAIN_PATH, PROCESSED_DATA_DIR
+from src.nlp_extractor import get_nlp_feature_names
 
 
 Q_COLS = [f"a{i}" for i in range(1, 25)]
@@ -67,6 +68,13 @@ def preprocess_for_training(df: pd.DataFrame) -> pd.DataFrame:
             drop_cols.append(col)
     if drop_cols:
         df.drop(columns=drop_cols, inplace=True)
+
+    # ---- NLP flag columns (optional — present in synthetic data, absent in legacy CSV) ----
+    nlp_cols_present = []
+    for col in get_nlp_feature_names():
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0).astype(int)
+            nlp_cols_present.append(col)
 
     # ---- Drop rows with missing core fields ----
     core_cols = Q_COLS + ["age_mons", "sex", "jaundice", "family_mem_with_asd", "risk_class"]
